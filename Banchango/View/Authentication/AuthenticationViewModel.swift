@@ -98,7 +98,7 @@ class AuthenticationViewModel: ObservableObject {
                     self?.isLoading = false
                     self?.currentUser = existingUser
                     self?.userId = existingUser.id
-                    print("Logged in User: \(existingUser)") // 추가: 로그인한 사용자 정보 출력
+                    //print("Logged in User: \(existingUser)") // 추가: 로그인한 사용자 정보 출력
                     
                     // 닉네임 유무 확인
                     if existingUser.nickname?.isEmpty ?? true {

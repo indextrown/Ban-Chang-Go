@@ -174,27 +174,7 @@ struct LoadedView: View {
                                 .padding(.trailing, -20) // 필요 시 오른쪽 여백 제거
                                 .padding(.bottom, 20)
                         }
-                    
-                    
-                    
-                    
-//                    RectViewH(height: 300, color: .white)
-//                        .overlay {
-//                            Text("이번주 평균 걸음 수는?")
-//                                .font(.system(size: 20))
-//                                .fontWeight(.bold)
-//                                .foregroundColor(.black)
-//                                .padding()
-//                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading) // 좌측 상단 정렬
-//
-//                            GradientAreaChartExampleView(stepData: viewModel.weeklyStepData)
-//                                .aspectRatio(2, contentMode: .fit)
-//                                .aspectRatio(2.0, contentMode: .fit) // 가로 비율 조정
-////                                .frame(width: 400, height: 130)
-//                                .padding(.horizontal, 16)
-//                                .padding(.bottom, 30)
-//                                .padding(.leading, 20)
-//                        }
+
                     }
                 }
             }
@@ -487,7 +467,26 @@ struct GradientAreaChartExampleView: View {
 }
 
 
-
+/*
+struct GradientAreaChartExampleView_Previews: PreviewProvider {
+    static var previews: some View {
+        let calendar = Calendar.current
+        let today = calendar.date(byAdding: .day, value: -7, to: Date())!
+        //calendar.startOfDay(for: Date()) // 오늘 날짜
+        
+        // 지난 6일치 데이터와 오늘 날짜를 포함한 데이터를 생성
+        let testStepData: [StepData] = (0...6).map { dayOffset in
+            let date = calendar.date(byAdding: .day, value: -dayOffset, to: today)!
+            return StepData(date: date, steps: Int.random(in: 1000...8000))
+        }.reversed() // 날짜가 오름차순이 되도록 뒤집기
+        
+        // GradientAreaChartExampleView의 Preview에 생성한 테스트 데이터 전달
+        GradientAreaChartExampleView(stepData: testStepData)
+            .padding()
+            .previewLayout(.sizeThatFits)
+    }
+}
+*/
 
 
 

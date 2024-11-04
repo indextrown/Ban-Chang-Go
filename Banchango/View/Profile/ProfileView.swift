@@ -24,7 +24,7 @@ class ProfileViewModel: ObservableObject {
         self.container = container
         self.userId = userId
         self.myUser = currentUser
-        print("Initialized ProfileViewModel with User: \(String(describing: myUser))") // 추가: 초기화된 사용자 정보 출력
+        //print("Initialized ProfileViewModel with User: \(String(describing: myUser))") // 추가: 초기화된 사용자 정보 출력
     }
     
     func send(action: Action) {
@@ -73,38 +73,22 @@ struct ProfileView: View {
                             .font(.system(size: 35, weight: .bold))
                         Spacer()
                     }
-//                    .padding(.leading, 20)
-                    
-                    // 실제 View 내용
                     RectViewHC(height: 50, color: .white, radius: 15)
-                        .overlay {
-                            HStack {
-                                Text("닉네임")
-                                Spacer()
-                                //                                Text(profileVM.myUser?.nickname ?? "닉네임")
-                                if isEditing {
-                                    TextField("닉네임", text: $nickname)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 100)
-                                    //.foregroundColor(.black)
-                                    Button("저장") {
-                                        profileVM.myUser?.nickname = nickname
-                                        authVM.send(action: .updateNickname(nickname))
-                                        isEditing = false
-                                    }
-                                } else {
+                                .overlay {
                                     Button(action: {
-                                        nickname = profileVM.myUser?.nickname ?? ""
                                         isEditing.toggle()
                                     }) {
-                                        Text(profileVM.myUser?.nickname ?? "닉네임")
-                                        
+                                        HStack {
+                                            Text(profileVM.myUser?.nickname ?? "닉네임")
+                                                .foregroundColor(.bkText)
+                                            Spacer()
+                                        }
+                                        .padding()
                                     }
                                 }
-                            }
-                            .padding()
-                        }
-                    
+                                .sheet(isPresented: $isEditing) {
+                                    NicknameEditView(isEditing: $isEditing, nickname: $nickname, profileVM: profileVM, authVM: authVM)
+                                }
                     
                     RectViewHC(height: 100, color: .white, radius: 15)
                         .overlay {
@@ -168,6 +152,44 @@ struct ProfileView: View {
         }
     }
 }
+
+// 별도의 닉네임 편집 뷰 생성
+struct NicknameEditView: View {
+    @Binding var isEditing: Bool
+    @Binding var nickname: String
+    @ObservedObject var profileVM: ProfileViewModel
+    @ObservedObject var authVM: AuthenticationViewModel
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("닉네임 수정")
+                .font(.headline)
+            
+            TextField("새로운 닉네임을 입력하세요", text: $nickname)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+            
+            HStack {
+                Button("취소") {
+                    isEditing = false
+                }
+                .padding()
+                
+                Spacer()
+                
+                Button("저장") {
+                    profileVM.myUser?.nickname = nickname
+                    authVM.send(action: .updateNickname(nickname))
+                    isEditing = false
+                }
+                .padding()
+            }
+            .padding()
+        }
+        .padding()
+    }
+}
+
 #Preview {
     let container = DIContainer(services: StubService()) // DIContainer 초기화
     let user = User(id: "user1_id", name: "jemas", nickname: "Preview User") // User 객체 생성
