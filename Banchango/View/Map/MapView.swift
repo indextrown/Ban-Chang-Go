@@ -64,6 +64,15 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
         }
     }
+    
+    // 현재 위치로 카메라 이동 함수
+    func moveToCurrentLocation() {
+        if let location = location {
+            position = .camera(
+                MapCamera(centerCoordinate: location.coordinate, distance: 5000, heading: 0, pitch: 0)
+            )
+        }
+    }
 }
 
 // SwiftUI View에서 LocationManager 사용
@@ -74,13 +83,14 @@ struct MapView: View {
         ZStack {
             Map(position: $viewModel.position) {
                 //UserAnnotation()
-                // 사용자 위치에 커스텀 MapMarker 표시
+                
+                // 커스텀 MapMarker 표시
                 if let location = viewModel.location {
                     // 사용자 위치에 커스텀 마커를 추가
                     Annotation("내 위치", coordinate: location.coordinate) {
                         Circle()
                             .fill(Color.blue)
-                            .frame(width: 15, height: 15)
+                            .frame(width: 17, height: 17)
                             .overlay(
                                 Circle()
                                     .stroke(Color.white, lineWidth: 2)
@@ -90,6 +100,52 @@ struct MapView: View {
                 }
             }
             .ignoresSafeArea()
+            
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button {
+                        viewModel.moveToCurrentLocation()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(.mainorange)
+                                .frame(width: 50, height: 50)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.black.opacity(0.2), lineWidth: 2) // 테두리 추가
+                                )
+                            
+                            Image(systemName: "location.fill") // 아이콘
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 24, height: 24)
+                                                .foregroundColor(.white)
+                                                .offset(x: -1, y: 1)
+                        }
+                        /*
+                        Image(systemName: "location")
+                            .resizable() // 크기 조정을 가능하게 함
+                            .scaledToFit() // 원 안에 이미지가 맞도록 비율 조정
+                            .font(.system(size: 40, weight: .bold))
+                            .padding(8)
+                            .frame(width: 50, height: 50)
+                            .background(.mainorange)
+                            .cornerRadius(10)
+                            .foregroundColor(.white)
+                            .clipShape(Circle()) // 원형으로 자르기
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.black.opacity(0.2), lineWidth: 2) // 테두리 추가
+                            )
+                         */
+                     
+                    }
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 20)
+                }
+            }
             
             /* MARK: - 현재 위치 디버깅용
             VStack {
