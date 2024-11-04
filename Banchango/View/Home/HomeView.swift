@@ -1,4 +1,3 @@
-//
 //  HomeView.swift
 //  Banchango
 //
@@ -43,6 +42,8 @@ struct HomeView: View {
 struct LoadedView: View {
     @StateObject private var viewModel = PedometerViewModel()
     @State private var goalSteps: Int = 2000 // 기본 목표 걸음 수
+    
+
     var body: some View {
         VStack(spacing: 20) {
             ScrollView(showsIndicators: false) {
@@ -56,7 +57,7 @@ struct LoadedView: View {
                         .overlay {
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text("오늘의 걸음수 👟")
+                                    Text("오늘의 걸음 👟")
                                         .font(.system(size: 20))
                                         .fontWeight(.bold)
                                         .foregroundColor(.black)
@@ -116,7 +117,7 @@ struct LoadedView: View {
                     RectViewH(height: 130, color: .white)
                         .overlay {
                             VStack {
-                                Text("목표 걸음 수")
+                                Text("목표 걸음")
                                     .font(.system(size: 20))
                                     .fontWeight(.bold)
                                     .foregroundColor(.black)
@@ -130,7 +131,8 @@ struct LoadedView: View {
                                         Text("-")
                                             .font(.system(size: 30))
                                             .frame(width: 50, height: 50)
-                                            .background(Color.gray.opacity(0.2))
+                                            .foregroundColor(.bkText)
+                                            //.background(Color.gray.opacity(0.2))
                                             .cornerRadius(10)
                                     }
                                     
@@ -145,7 +147,8 @@ struct LoadedView: View {
                                         Text("+")
                                             .font(.system(size: 30))
                                             .frame(width: 50, height: 50)
-                                            .background(Color.gray.opacity(0.2))
+                                            .foregroundColor(.bkText)
+//                                            .background(Color.gray.opacity(0.2))
                                             .cornerRadius(10)
                                     }
                                 }
@@ -153,31 +156,55 @@ struct LoadedView: View {
                             .padding()
                         }
                     
-                    RectViewH(height: 300, color: .white)
+                    
+                    RectViewH(height: 270, color: .white)
                         .overlay {
-                            
-                            Text("이번주 걸음 수는?")
+                            Text("이번주 걸음 그래프")
                                 .font(.system(size: 20))
                                 .fontWeight(.bold)
                                 .foregroundColor(.black)
                                 .padding()
+                                .padding(.leading, 10)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading) // 좌측 상단 정렬
+                                
                             
-                            
-                            GradientAreaChartExampleView(stepData: viewModel.weeklyStepData) // 최근 7일 데이터 전달
-                                .padding(10)
+                            GradientAreaChartExampleView(stepData: viewModel.weeklyStepData)
+                                .padding(.top, 50)
+                                .padding(.leading, 20) // 차트를 오른쪽으로 이동
+                                .padding(.trailing, -20) // 필요 시 오른쪽 여백 제거
+                                .padding(.bottom, 20)
                         }
+                    
+                    
+                    
+                    
+//                    RectViewH(height: 300, color: .white)
+//                        .overlay {
+//                            Text("이번주 평균 걸음 수는?")
+//                                .font(.system(size: 20))
+//                                .fontWeight(.bold)
+//                                .foregroundColor(.black)
+//                                .padding()
+//                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading) // 좌측 상단 정렬
+//
+//                            GradientAreaChartExampleView(stepData: viewModel.weeklyStepData)
+//                                .aspectRatio(2, contentMode: .fit)
+//                                .aspectRatio(2.0, contentMode: .fit) // 가로 비율 조정
+////                                .frame(width: 400, height: 130)
+//                                .padding(.horizontal, 16)
+//                                .padding(.bottom, 30)
+//                                .padding(.leading, 20)
+//                        }
+                    }
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .onAppear {
+                viewModel.startPedometerUpdates()
+                viewModel.fetchLast7DaysStepData()
+            }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
-        //.background(.gray1)
-        .onAppear {
-            viewModel.startPedometerUpdates()
-            viewModel.fetchLast7DaysStepData()
-        }
-    }
     
     // 현재 날짜를 문자열로 반환하는 함수
     private func getCurrentDateString() -> String {
@@ -187,9 +214,6 @@ struct LoadedView: View {
     }
 }
 
-#Preview {
-    HomeView(viewModel: .init(container: .init(services: StubService()), userId: "user1_id"))
-}
 
 
 // MARK: - ViewModel (Pedometer Data)
@@ -270,26 +294,6 @@ final class PedometerViewModel: ObservableObject {
         }
     }
 
-    
-//    func startPedometerUpdates() {
-//        let startOfToday = Calendar.current.startOfDay(for: Date())
-//        if CMPedometer.isStepCountingAvailable() {
-//            pedometer.queryPedometerData(from: startOfToday, to: Date()) { data, error in
-//                if let data = data, error == nil {
-//                    DispatchQueue.main.async {
-//                        self.stepCount = data.numberOfSteps.intValue
-//                    }
-//                }
-//            }
-//            pedometer.startUpdates(from: startOfToday) { data, error in
-//                if let data = data, error == nil {
-//                    DispatchQueue.main.async {
-//                        self.stepCount = data.numberOfSteps.intValue
-//                    }
-//                }
-//            }
-//        }
-//    }
     
     private func calculateCalories() {
         let caloriesPerStep = 0.04
@@ -396,19 +400,8 @@ final class PedometerViewModel: ObservableObject {
                 }
             }
         }
-        
-        // 실시간으로 오늘의 걸음 수는 startPedometerUpdates에서 처리
     }
-
-
-
-    
-
-
-
 }
-
-
 
 
 // MARK: - Model
@@ -418,21 +411,17 @@ struct StepData: Identifiable {
     let steps: Int
 }
 
-// MARK: - View
-
 struct GradientAreaChartExampleView: View {
     
     // 최근 7일간의 걸음 수 데이터를 외부에서 전달받는 속성
-//    @Binding var stepData: [StepData]
     let stepData: [StepData]
-    
     
     // 그래디언트 스타일 정의
     let linearGradient = LinearGradient(
         gradient: Gradient(
             colors: [
-                Color.maincolor.opacity(0.4), // 상단의 불투명한 색상
-                Color.maincolor.opacity(0)    // 하단의 투명한 색상
+                Color.maincolor.opacity(0.4),
+                Color.maincolor.opacity(0)
             ]
         ),
         startPoint: .top,
@@ -441,31 +430,22 @@ struct GradientAreaChartExampleView: View {
     
     var body: some View {
         Chart {
-            // MARK: - line
             ForEach(stepData) { data in
                 LineMark(x: .value("Date", data.date),
                          y: .value("Steps", data.steps))
-                .foregroundStyle(.mainorange)
-            }
-            .interpolationMethod(.cardinal)
-            
-            // MARK: - gradient
-            ForEach(stepData) { data in
+                    .foregroundStyle(.mainorange)
+                    .interpolationMethod(.cardinal)
+                
                 AreaMark(x: .value("Date", data.date),
                          y: .value("Steps", data.steps))
-              
-            }
-            .interpolationMethod(.cardinal)
-            .foregroundStyle(linearGradient)
-            
-            // MARK: - dot
-            ForEach(stepData) { data in
-                PointMark(x: .value("Date", data.date),
-                          y: .value("Steps", data.steps)) // 점 표시
-                    .foregroundStyle(.mainred) // 점의 색상 설정
-                    .symbolSize(40) // 점 크기 설정
+                    .interpolationMethod(.cardinal)
+                    .foregroundStyle(linearGradient)
                 
-                    .annotation(position: .top) { // 점의 우측 대각선 상단에 표시
+                PointMark(x: .value("Date", data.date),
+                          y: .value("Steps", data.steps))
+                    .foregroundStyle(.mainred)
+                    .symbolSize(40)
+                    .annotation(position: .top) {
                         Text("\(data.steps)")
                             .font(.caption)
                             .foregroundColor(.black)
@@ -476,45 +456,34 @@ struct GradientAreaChartExampleView: View {
                     }
             }
         }
-
-        .offset(x: 20) // 오른쪽으로 20포인트 이동
         .chartXAxis {
-                AxisMarks(values: stride(from: -1, to: 7, by: 1).map { dayOffset in
-                    Calendar.current.date(byAdding: .day, value: -6 + dayOffset, to: Date())! // 오늘 날짜를 포함하여 7일 생성
-                }.reversed()) { value in
-                    if let date = value.as(Date.self) {
-                        AxisValueLabel(getKoreanWeekday(from: date), centered: true)
-                            .offset(x: -20)
-                    }
+            // x축에 표시할 날짜 배열 생성
+            let weekdays = Array(stride(from: Calendar.current.date(byAdding: .day, value: -1, to: stepData.first?.date ?? Date())!,
+                                        to: Calendar.current.date(byAdding: .day, value: 2, to: stepData.last?.date ?? Date())!,
+                                        by: 60 * 60 * 24))
+            
+            AxisMarks(values: weekdays) { value in
+                if let date = value.as(Date.self) {
+                    AxisValueLabel(getKoreanWeekday(from: date), centered: true)
+                        .offset(x: -20)
                 }
             }
-        
-        .chartYAxis(.hidden)
-        .chartYScale(domain: 0...12000) // 걸음 수 최대 범위 설정
-//        .aspectRatio(1, contentMode: .fit)
-//        .frame(width: 400, height: 300)
-        //.frame(width: 350, height: 250) // 원하는 높이 설정
-    }
-        
-    
-
-
-    // MARK: - Helper Function (한글 요일 표시)
-    func getKoreanWeekday_save(from date: Date) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "ko_KR") // 한국어 로케일 설정
-        dateFormatter.dateFormat = "E" // 요일만 출력하기 위한 포맷 (월, 화, 수...)
-        return dateFormatter.string(from: date) // 변환된 요일 문자열 반환
-    }
-    
-    // MARK: - Helper Function (한글 요일 표시)
-        func getKoreanWeekday(from date: Date) -> String {
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: "ko_KR") // 한국어 로케일 설정
-            dateFormatter.timeZone = TimeZone(identifier: "Asia/Seoul") // 한국 시간대 설정
-            dateFormatter.dateFormat = "E" // 요일만 출력하기 위한 포맷 (월, 화, 수...)
-            return dateFormatter.string(from: date) // 변환된 요일 문자열 반환
         }
+        .chartYAxis(.hidden) // y축 눈금 제거
+        .chartYScale(domain: 0...10000)
+        .chartXScale(domain: (stepData.first?.date ?? Date())...(Calendar.current.date(byAdding: .day, value: 1, to: stepData.last?.date ?? Date())!))
+        .padding(.leading, 20)
+        .padding(.trailing, 20)
+        .frame(height: 200)
+    }
+    
+    func getKoreanWeekday(from date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "ko_KR")
+        dateFormatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        dateFormatter.dateFormat = "E"
+        return dateFormatter.string(from: date)
+    }
 }
 
 
@@ -522,56 +491,7 @@ struct GradientAreaChartExampleView: View {
 
 
 
+#Preview {
+    HomeView(viewModel: .init(container: .init(services: StubService()), userId: "user1_id"))
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//        .chartXAxis {
-//            AxisMarks(values: stepData.map { $0.date }) { value in
-//                if let date = value.as(Date.self) {
-//                    AxisValueLabel(getKoreanWeekday(from: date), centered: true)
-//                }
-//            }
-//        }
-
-
-//        .chartXAxis {
-//            AxisMarks(values: stride(from: 0, to: 7, by: 1).map { dayOffset in
-//                Calendar.current.date(byAdding: .day, value: -dayOffset, to: Date())!
-//            }.reversed()) { value in
-//                if let date = value.as(Date.self) {
-//                    AxisValueLabel(getKoreanWeekday(from: date), centered: true)
-//                }
-//            }
-//        }
-
-
-//        .chartXAxis {
-//            AxisMarks(values: stepData.map { $0.date }) { value in
-//                //AxisGridLine()
-//                //AxisTick()
-//                if let date = value.as(Date.self) {
-//                    AxisValueLabel(getKoreanWeekday(from: date), centered: true)
-//                }
-//            }
-//        }
