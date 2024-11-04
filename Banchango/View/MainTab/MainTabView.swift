@@ -39,10 +39,11 @@ struct MainTabView: View {
     }
     init() {
         UITabBar.appearance().backgroundColor = .white
-        UITabBar.appearance().unselectedItemTintColor = UIColor(Color.bkText)
+        //UITabBar.appearance().unselectedItemTintColor = UIColor(Color.bkText)
     }
 }
 
 #Preview {
     MainTabView()
 }
+

@@ -10,11 +10,14 @@ import Charts
 
 struct HomeView: View {
     @StateObject var viewModel: HomeViewModel
+    // 테스트 호출 함수
+    
     var body: some View {
         VStack {
             contentView
         }
         .background(Color.gray1)
+        
     }
     
     @ViewBuilder
