@@ -15,6 +15,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     
     // 사용자 위치가 처음 업데이트될 때만 카메라 위치를 업데이트하기 위해 플래그 추가
     private var isFirstUpdate = true
+    private var loadedPharmacies: Set<String> = []
     
     // 카메라 위치 관리
     @Published var position: MapCameraPosition = .automatic
@@ -65,23 +66,6 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         }
     }
 
-    
-    func fetchNearbyPharmacies() {
-            guard let location = location else { return }
-            
-            Task {
-                let result = await PharmacyService.shared.getNearbyPharmacies(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
-                switch result {
-                case .success(let pharmacies):
-                    DispatchQueue.main.async {
-                        self.pharmacies = pharmacies
-                    }
-                case .failure(let error):
-                    print("약국 데이터를 가져오는 데 실패했습니다: \(error)")
-                }
-            }
-        }
-    
     // 현재 위치로 카메라 이동 함수
     func moveToCurrentLocation() {
         if let location = location {
@@ -113,9 +97,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
         return detailedPharmacy
     }
-
-  
-    // 비동기로 약국 정보를 가져오는 함수
+    
     func debouncefetchNearbyPharmacies(for coordinate: CLLocationCoordinate2D) {
         DispatchQueue.global(qos: .userInitiated).async {
             Task { [weak self] in
@@ -124,63 +106,64 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
                 
                 switch result {
                 case .success(let newPharmacies):
-                    // 백그라운드 스레드에서 딕셔너리 처리
-                    var pharmacyDictionary: [String: Pharmacy] = [:]
-                    
-                    // 기존 약국을 딕셔너리에 추가
-                    for pharmacy in self.pharmacies {
-                        let key = "\(pharmacy.name) \(pharmacy.address)"
-                        pharmacyDictionary[key] = pharmacy
-                    }
-                    
-                    // 새로운 약국을 딕셔너리에 추가
-                    for newPharmacy in newPharmacies {
-                        let key = "\(newPharmacy.name) \(newPharmacy.address)"
-                        pharmacyDictionary[key] = newPharmacy // 중복된 경우 무시하고 추가
-                    }
-                    
-                    // 딕셔너리를 배열로 변환한 후 UI 업데이트를 위해 메인 스레드로 전환
-                    let updatedPharmacies = Array(pharmacyDictionary.values)
-                    
                     DispatchQueue.main.async {
-                        self.pharmacies = updatedPharmacies
+                        for newPharmacy in newPharmacies {
+                            // 기존 약국 찾기
+                            if let existingIndex = self.pharmacies.firstIndex(where: { $0.name == newPharmacy.name && $0.address == newPharmacy.address }) {
+                                // 기존 약국이 있는 경우 운영 상태를 덮어쓰지 않음
+                                let existingPharmacy = self.pharmacies[existingIndex]
+                                self.pharmacies[existingIndex].operatingHours = existingPharmacy.operatingHours.isEmpty ? newPharmacy.operatingHours : existingPharmacy.operatingHours
+                                self.pharmacies[existingIndex].isOpen = existingPharmacy.isOpen
+                            } else {
+                                // 새로운 약국 데이터인 경우 추가
+                                self.pharmacies.append(newPharmacy)
+                            }
+                        }
                     }
-                    
-                    //                    // 디버깅 출력: 약국 목록을 이쁘게 출력
-                    //                    let formattedPharmacies = updatedPharmacies.map { pharmacy in
-                    //                        return """
-                    //                        이름: \(pharmacy.name)
-                    //                        주소: \(pharmacy.address)
-                    //                        city: \(pharmacy.city)
-                    //                        전화번호: \(pharmacy.phone)
-                    //                        좌표: (\(pharmacy.latitude), \(pharmacy.longitude))
-                    //                        운영시간: \(pharmacy.operatingHours)
-                    //                        """
-                    //                    }.joined(separator: "\n-----------------\n") // 각 약국 정보 사이에 구분선 추가
-                    //                    
-                    //                    print("Updated pharmacies:\n\(formattedPharmacies)")
-                    
-                    
-                    
-                     // 운영 시간이 비어있는 경우에만 세부 정보 요청
-                     for pharmacy in updatedPharmacies where pharmacy.operatingHours.isEmpty {
-                         print("Fetching details for pharmacy: \(pharmacy.name)")
-                             Task {
-                                 let city = pharmacy.city[0]
-                                 let lastCity = pharmacy.city[1]
-                                     if let detailedPharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: city, q1: lastCity, pageNo: "1", numOfRows: "10", qn: pharmacy.name) {
-                                         DispatchQueue.main.async {
-                                            if let index = self.pharmacies.firstIndex(where: { $0.name == detailedPharmacy.name }) {
-                                                self.pharmacies[index].operatingHours = detailedPharmacy.operatingHours
-                                            }
-                                         }
-                                     } else {
-                                         print("Failed to fetch details for pharmacy: \(pharmacy.name)")
-                                 }
-                             }
-                         }
+
+                    // 운영 시간이 비어 있고, 새로운 약국들에 대해서만 세부 정보 요청 및 업데이트
+                    for pharmacy in self.pharmacies where pharmacy.operatingHours.isEmpty {
+                        let pharmacyKey = "\(pharmacy.name) \(pharmacy.address)"
+                        
+                        if !self.loadedPharmacies.contains(pharmacyKey) {
+                            //print("Attempting to fetch details for:", pharmacyKey)
+                            
+                            Task {
+                                //print("Task started for:", pharmacyKey)
+                                
+                                /*
+                                guard let city = pharmacy.city.first, let lastCity = pharmacy.city.last,
+                                      let encodedName = pharmacy.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+                                    //print("Guard condition failed for:", pharmacyKey)
+                                    return
+                                }
+                                 */
+                                guard let city = pharmacy.city.first, let lastCity = pharmacy.city.last else {
+                                    return
+                                }
+                                
+                                if let detailedPharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: city, q1: lastCity, pageNo: "1", numOfRows: "10", qn: pharmacy.name) {
+                                    DispatchQueue.main.async {
+                                        if let index = self.pharmacies.firstIndex(where: { $0.name == detailedPharmacy.name }) {
+                                            self.pharmacies[index].operatingHours = detailedPharmacy.operatingHours
+                                            
+                                            // 영업 상태 업데이트
+                                            let today = getDay(from: Date())
+                                            let hours = operatingHours(for: today, operatingHours: self.pharmacies[index].operatingHours)
+                                            self.pharmacies[index].isOpen = isOpenNow(startTime: hours.start, endTime: hours.end)
+                                        }
+                                        
+                                        // 세부 정보를 성공적으로 로드한 약국은 loadedPharmacies에 추가
+                                        self.loadedPharmacies.insert(pharmacyKey)
+                                        //print("Added to loadedPharmacies:", pharmacyKey)
+                                    }
+                                } else {
+                                    print("Failed to fetch details for pharmacy:", pharmacyKey)
+                                }
+                            }
+                        }
+                    }
                      
-                    
                 case .failure(let error):
                     print("약국 데이터를 가져오는 데 실패했습니다: \(error)")
                 }
@@ -231,7 +214,8 @@ struct MapView: View {
                         } label: {
                             Image(systemName: "pill.circle")
                                 .resizable()
-                                .foregroundColor(.green)
+                                .foregroundColor(pharmacy.isOpen == true ? .red : .gray)
+                                //.foregroundColor(.green)
                                 .background(Circle().fill(Color.white))
                                 .frame(width: 30, height: 30)
                                 .shadow(radius: 4)
@@ -247,23 +231,14 @@ struct MapView: View {
                 // 카메라 중심 좌표 변경 시 호출
                 let centerCoordinate = context.camera.centerCoordinate
                 viewModel.debouncefetchNearbyPharmacies(for: centerCoordinate)
-//                viewModel.fetchNearbyPharmacies(for: centerCoordinate)
             }
             //.ignoresSafeArea()
-            //
             // 모달 뷰 표시
             .sheet(item: $selectedPlace) { place in
                 // 선택된 장소가 있을 경우 모달 뷰를 표시
                 PharmacyDetailView(pharmacy: place)
                     .presentationDetents([.fraction(0.5)])  // 모달 뷰가 화면의 절반만 차지하도록 설정
             }
-//            .sheet(isPresented: $showDetailView) {
-//                if let selectedPlace = selectedPlace {
-//                    PharmacyDetailView(pharmacy: selectedPlace)
-//                        //.presentationDetents([.medium])
-//                        .presentationDetents([.fraction(0.3)])  // 모달 뷰가 화면의 절반만 차지하도록 설정
-//                }
-//            }
             
             VStack {
                 Spacer()
@@ -326,6 +301,231 @@ struct PharmacyDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+
+// 비동기로 약국 정보를 가져오는 함수
+//func debouncefetchNearbyPharmacies2(for coordinate: CLLocationCoordinate2D) {
+//    DispatchQueue.global(qos: .userInitiated).async {
+//        Task { [weak self] in
+//            guard let self = self else { return }
+//            let result = await PharmacyService.shared.getNearbyPharmacies(latitude: coordinate.latitude, longitude: coordinate.longitude)
+//            
+//            switch result {
+//            case .success(let newPharmacies):
+//                // 백그라운드 스레드에서 딕셔너리 처리
+//                var pharmacyDictionary: [String: Pharmacy] = [:]
+//                
+//                // 기존 약국을 딕셔너리에 추가
+//                for pharmacy in self.pharmacies {
+//                    let key = "\(pharmacy.name) \(pharmacy.address)"
+//                    pharmacyDictionary[key] = pharmacy
+//                }
+//                
+//                // 새로운 약국을 딕셔너리에 추가
+//                for newPharmacy in newPharmacies {
+//                    let key = "\(newPharmacy.name) \(newPharmacy.address)"
+//                    pharmacyDictionary[key] = newPharmacy // 중복된 경우 무시하고 추가
+//                }
+//                
+//                // 업데이트된 약국 리스트 생성
+//                let updatedPharmacies = Array(pharmacyDictionary.values)
+//                
+//                DispatchQueue.main.async {
+//                    self.pharmacies = updatedPharmacies
+//                }
+//                
+//                /*
+//                //디버깅 출력: 약국 목록을 이쁘게 출력
+//                let formattedPharmacies = updatedPharmacies.map { pharmacy in
+//                    return """
+//                    이름: \(pharmacy.name)
+//                    주소: \(pharmacy.address)
+//                    city: \(pharmacy.city)
+//                    전화번호: \(pharmacy.phone)
+//                    좌표: (\(pharmacy.latitude), \(pharmacy.longitude))
+//                    운영시간: \(pharmacy.operatingHours)
+//                    """
+//                }.joined(separator: "\n-----------------\n") // 각 약국 정보 사이에 구분선 추가
+//                
+//                print("Updated pharmacies:\n\(formattedPharmacies)")
+//                 */
+//                
+//                 // 운영 시간이 비어있는 경우에만 세부 정보 요청
+//                
+//                
+//                for pharmacy in updatedPharmacies where pharmacy.operatingHours.isEmpty {
+//                 print("Fetching details for pharmacy: \(pharmacy.name)")
+//                     Task {
+//                         let city = pharmacy.city[0]
+//                         let lastCity = pharmacy.city[1]
+//                             if let detailedPharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: city, q1: lastCity, pageNo: "1", numOfRows: "10", qn: pharmacy.name) {
+//                                 DispatchQueue.main.async {
+//                                     if let index = self.pharmacies.firstIndex(where: { $0.name == detailedPharmacy.name }) {
+//                                         self.pharmacies[index].operatingHours = detailedPharmacy.operatingHours
+//                                         
+//                                         let today = getDay(from: Date())
+//                                         let hours = operatingHours(for: today, operatingHours: self.pharmacies[index].operatingHours)
+//                                         self.pharmacies[index].isOpen = isOpenNow(startTime: hours.start, endTime: hours.end)
+//                                     }
+//                                 }
+//                             } else {
+//                                 print("Failed to fetch details for pharmacy: \(pharmacy.name)")
+//                         }
+//                     }
+//                 }
+//            
+//
+//
+//
+//
+//                
+//            case .failure(let error):
+//                print("약국 데이터를 가져오는 데 실패했습니다: \(error)")
+//            }
+//        }
+//    }
+//}
+//
+
+
+
+final class LocationManager3: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private var locationManager = CLLocationManager()
+    private var isFirstUpdate = true
+    @Published var position: MapCameraPosition = .automatic
+    @Published var location: CLLocation?
+    @Published var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 35.16839757570803, longitude: 128.1347953060123),
+        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+    )
+    @Published var pharmacies: [Pharmacy] = []
+    
+    // 이미 불러온 약국 정보를 추적하기 위한 Set
+    private var loadedPharmacies: Set<String> = []
+    
+    private var debounceWorkItem: DispatchWorkItem?
+
+    override init() {
+        super.init()
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
+    }
+    
+    func moveToCurrentLocation() {
+        if let location = location {
+            DispatchQueue.main.async {
+                self.position = .camera(
+                    MapCamera(centerCoordinate: location.coordinate, distance: 5000, heading: 0, pitch: 0)
+                )
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self, let location = locations.first else { return }
+
+            if self.isFirstUpdate {
+                DispatchQueue.main.async {
+                    self.position = .camera(
+                        MapCamera(centerCoordinate: location.coordinate, distance: 5000, heading: 0, pitch: 0)
+                    )
+                    self.isFirstUpdate = false
+                    self.debouncefetchNearbyPharmacies(for: location.coordinate)
+                }
+            }
+            DispatchQueue.main.async { self.location = location }
+        }
+    }
+    
+    func debouncefetchNearbyPharmacies(for coordinate: CLLocationCoordinate2D) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            Task { [weak self] in
+                guard let self = self else { return }
+                let result = await PharmacyService.shared.getNearbyPharmacies(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                
+                switch result {
+                case .success(let newPharmacies):
+                    var pharmacyDictionary: [String: Pharmacy] = [:]
+                    
+                    for pharmacy in self.pharmacies {
+                        let key = "\(pharmacy.name) \(pharmacy.address)"
+                        pharmacyDictionary[key] = pharmacy
+                    }
+                    
+                    for newPharmacy in newPharmacies {
+                        let key = "\(newPharmacy.name) \(newPharmacy.address)"
+                        pharmacyDictionary[key] = newPharmacy
+                    }
+                    
+                    let updatedPharmacies = Array(pharmacyDictionary.values)
+                    
+                    DispatchQueue.main.async {
+                        self.pharmacies = updatedPharmacies
+                    }
+
+                    /*
+                    for pharmacy in updatedPharmacies where pharmacy.operatingHours.isEmpty {
+                        Task {
+                            let city = pharmacy.city[0]
+                            let lastCity = pharmacy.city[1]
+                            
+                            if let detailedPharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: city, q1: lastCity, pageNo: "1", numOfRows: "10", qn: pharmacy.name) {
+                                DispatchQueue.main.async {
+                                    if let index = self.pharmacies.firstIndex(where: { $0.name == detailedPharmacy.name }) {
+                                        self.pharmacies[index].operatingHours = detailedPharmacy.operatingHours
+                                        
+                                        let today = getDay(from: Date())
+                                        let hours = operatingHours(for: today, operatingHours: self.pharmacies[index].operatingHours)
+                                        self.pharmacies[index].isOpen = isOpenNow(startTime: hours.start, endTime: hours.end)
+                                    }
+                                }
+                            } else {
+                                print("Failed to fetch details for pharmacy: \(pharmacy.name)")
+                            }
+                        }
+                    }
+                     */
+                    
+                    for pharmacy in updatedPharmacies where pharmacy.operatingHours.isEmpty {
+                        let pharmacyKey = "\(pharmacy.name) \(pharmacy.address)"
+                        
+                        // 이미 로드된 약국인지 확인
+                        if !self.loadedPharmacies.contains(pharmacyKey) {
+                            self.loadedPharmacies.insert(pharmacyKey)
+                            Task {
+                                await self.loadPharmacyDetails(for: pharmacy)
+                            }
+                        }
+                    }
+                     
+                case .failure(let error):
+                    print("약국 데이터를 가져오는 데 실패했습니다: \(error)")
+                }
+            }
+        }
+    }
+
+    
+    private func loadPharmacyDetails(for pharmacy: Pharmacy) async {
+        guard let city = pharmacy.city.first, let lastCity = pharmacy.city.last,
+              let encodedName = pharmacy.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
+
+        if let detailedPharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: city, q1: lastCity, pageNo: "1", numOfRows: "10", qn: encodedName) {
+            DispatchQueue.main.async {
+                if let index = self.pharmacies.firstIndex(where: { $0.name == detailedPharmacy.name }) {
+                    self.pharmacies[index].operatingHours = detailedPharmacy.operatingHours
+                    let today = getDay(from: Date())
+                    let hours = operatingHours(for: today, operatingHours: self.pharmacies[index].operatingHours)
+                    self.pharmacies[index].isOpen = isOpenNow(startTime: hours.start, endTime: hours.end)
+                }
+            }
+        }
+    }
+}
+
+
 /*
 
 
@@ -987,4 +1187,35 @@ struct PharmacyDetailView: View {
 
 
 
+*/
+
+
+/*
+for pharmacy in updatedPharmacies where pharmacy.operatingHours.isEmpty {
+                    let pharmacyKey = "\(pharmacy.name) \(pharmacy.address)"
+                    
+                    // 이미 로드된 약국인지 확인하고, 중복 요청 방지
+                    if !self.loadedPharmacies.contains(pharmacyKey) {
+                        self.loadedPharmacies.insert(pharmacyKey) // Set에 추가하여 다시 호출되지 않도록 설정
+                        
+                        Task {
+                            let city = pharmacy.city[0]
+                            let lastCity = pharmacy.city[1]
+                            
+                            if let detailedPharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: city, q1: lastCity, pageNo: "1", numOfRows: "10", qn: pharmacy.name) {
+                                DispatchQueue.main.async {
+                                    if let index = self.pharmacies.firstIndex(where: { $0.name == detailedPharmacy.name }) {
+                                        self.pharmacies[index].operatingHours = detailedPharmacy.operatingHours
+                                        
+                                        let today = getDay(from: Date())
+                                        let hours = operatingHours(for: today, operatingHours: self.pharmacies[index].operatingHours)
+                                        self.pharmacies[index].isOpen = isOpenNow(startTime: hours.start, endTime: hours.end)
+                                    }
+                                }
+                            } else {
+                                print("Failed to fetch details for pharmacy: \(pharmacy.name)")
+                            }
+                        }
+                    }
+                }
 */

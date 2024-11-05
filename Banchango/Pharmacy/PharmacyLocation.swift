@@ -14,7 +14,6 @@ import Foundation
 // MARK: - 약국 정보를 표현하는 Model
 struct Pharmacy: Codable, Hashable, Identifiable {
     var id: UUID = UUID()
-
     var name: String        // 약국이름
     let latitude: Double    // 위도
     let longitude: Double   // 경도
@@ -23,6 +22,7 @@ struct Pharmacy: Codable, Hashable, Identifiable {
     let roadAddress: String // 도로명 주소
     var phone: String       // 전화번호
     var operatingHours: [String:String] = [:]
+    var isOpen: Bool = false
     
     enum CodingKeys: String, CodingKey {
         case name = "place_name"
@@ -484,3 +484,93 @@ func testFetchPharmacyInfo() async {
 //            await testFetchPharmacyInfo()
 //        }
 //    }
+
+
+func timeStringToDate(_ timeString: String) -> Date? {
+    let timeComponents = timeString.components(separatedBy: ":")
+    guard timeComponents.count == 2,
+          let hour = Int(timeComponents[0]),
+          let minute = Int(timeComponents[1]) else {
+        print("잘못된 시간 형식: \(timeString)")
+        return nil
+    }
+    
+    // 만약 시간이 24시를 넘는다면, 이를 다음날 시간으로 변환
+    var adjustedHour = hour
+    if hour >= 24 {
+        adjustedHour = hour - 24
+    }
+
+    // 현재 날짜를 가져옴
+    let today = Date()
+    let calendar = Calendar.current
+
+    // 날짜 컴포넌트를 설정하고, 시간이 24시를 넘는 경우 하루를 더해줌
+    var dateComponents = calendar.dateComponents([.year, .month, .day], from: today)
+    if hour >= 24 {
+        dateComponents.day! += 1
+    }
+    dateComponents.hour = adjustedHour
+    dateComponents.minute = minute
+
+    let date = calendar.date(from: dateComponents)
+    //print("변환된 시간: \(timeString) -> \(String(describing: date))") // 디버깅용
+    return date
+}
+// 현재 시간과 영업 시간을 비교하는 함수
+func isOpenNow(startTime: String, endTime: String) -> Bool {
+    let currentTime = Date() // 현재 시간
+    guard let startDate = timeStringToDate(startTime),
+          let endDate = timeStringToDate(endTime) else {
+        return false
+    }
+    
+    //print("현재 시간: \(currentTime), 시작 시간: \(startDate), 종료 시간: \(endDate)")
+    
+    // 영업 종료 시간이 자정을 넘어가는 경우 처리
+    if endDate < startDate {
+        // 현재 시간이 영업 시작보다 이후이거나, 자정을 넘은 시간을 처리
+        return currentTime >= startDate || currentTime <= endDate
+    } else {
+        // 일반적인 경우, 시작 시간과 종료 시간 사이에 있는지 확인
+        return currentTime >= startDate && currentTime <= endDate
+    }
+}
+
+// 요일 확인
+func getDay(from date: Date) -> String {
+    let dateFormatter = DateFormatter()
+    
+    dateFormatter.locale = Locale(identifier: "ko_KR") // 한국어로 요일
+    dateFormatter.dateFormat = "EEEE" // 요일을 '월요일', '화요일' 등의 형태로 표시
+    let day = dateFormatter.string(from: date)
+    return day
+}
+// 시간을 "1100" -> "11:00" 형식으로 변환
+func formatTime(_ time: String) -> String {
+    guard time.count == 4 else { return time }
+    let hour = time.prefix(2)
+    let minute = time.suffix(2)
+    return "\(hour):\(minute)"
+}
+
+func operatingHours(for day: String, operatingHours: [String: String]) -> (start: String, end: String) {
+        switch day {
+        case "월요일":
+            return (formatTime(operatingHours["mon_s"] ?? "정보 없음"), formatTime(operatingHours["mon_e"] ?? "정보 없음"))
+        case "화요일":
+            return (formatTime(operatingHours["tue_s"] ?? "정보 없음"), formatTime(operatingHours["tue_e"] ?? "정보 없음"))
+        case "수요일":
+            return (formatTime(operatingHours["wed_s"] ?? "정보 없음"), formatTime(operatingHours["wed_e"] ?? "정보 없음"))
+        case "목요일":
+            return (formatTime(operatingHours["thu_s"] ?? "정보 없음"), formatTime(operatingHours["thu_e"] ?? "정보 없음"))
+        case "금요일":
+            return (formatTime(operatingHours["fri_s"] ?? "정보 없음"), formatTime(operatingHours["fri_e"] ?? "정보 없음"))
+        case "토요일":
+            return (formatTime(operatingHours["sat_s"] ?? "정보 없음"), formatTime(operatingHours["sat_e"] ?? "정보 없음"))
+        case "일요일":
+            return (formatTime(operatingHours["sun_s"] ?? "정보 없음"), formatTime(operatingHours["sun_e"] ?? "정보 없음"))
+        default:
+            return ("정보 없음", "정보 없음")
+        }
+    }
