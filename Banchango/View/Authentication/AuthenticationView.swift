@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AuthenticationView: View {
     @StateObject var authVM: AuthenticationViewModel
+
     //@StateObject var profileVM: ProfileViewModel
     var body: some View {
         VStack {

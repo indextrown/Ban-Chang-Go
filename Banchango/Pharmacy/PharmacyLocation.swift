@@ -12,7 +12,9 @@ import Foundation
 
 
 // MARK: - 약국 정보를 표현하는 Model
-struct Pharmacy: Codable, Hashable {
+struct Pharmacy: Codable, Hashable, Identifiable {
+    var id: UUID = UUID()
+
     var name: String        // 약국이름
     let latitude: Double    // 위도
     let longitude: Double   // 경도
@@ -378,12 +380,13 @@ class PharmacyManager {
             }
 
             do {
-                let (data, response) = try await URLSession.shared.data(from: url)
+                let (data, _) = try await URLSession.shared.data(from: url)
+//                let (data, response) = try await URLSession.shared.data(from: url)
                 //print("Received data size: \(data.count) bytes") // 데이터 크기 출력
                 
-                if let httpResponse = response as? HTTPURLResponse {
-                    //print("HTTP Response Status Code: \(httpResponse.statusCode)") // HTTP 응답 코드 출력
-                }
+//                if let httpResponse = response as? HTTPURLResponse {
+//                    //print("HTTP Response Status Code: \(httpResponse.statusCode)") // HTTP 응답 코드 출력
+//                }
 
                 let parser = XMLParser(data: data)
                 let xmlParserDelegate = PharmacyXMLParser()
