@@ -82,12 +82,16 @@ struct PharmacyResponse: Codable {
 // MARK: - 카카오API를 통해 특정 위치 주변의 약국 정보를 가져오는 역할을 하는 싱글톤 클래스
 class PharmacyService {
     static let shared = PharmacyService() // 싱글톤 인스턴스
-    private let apiKey = "f755f389dc23ec846d0a0d6c5f294536" // API 키
+    private let apiKey = Bundle.main.infoDictionary?["PHARMACY_SERVICE_API_KEY"] ?? ""
     private init() {} // private 생성자
     
     // MARK: -  특정 위치에서 반경 내의 약국 정보를 가져오는 비동기 함수
     func getNearbyPharmacies(latitude: Double, longitude: Double, radius: Int = 1000) async -> Result<[Pharmacy], APIError> {
-        let urlString = "https://dapi.kakao.com/v2/local/search/category.json?category_group_code=PM9&x=\(longitude)&y=\(latitude)&radius=\(radius)"
+        
+        let urlSecondString = Bundle.main.infoDictionary?["PHARMACY_SERVICE_URL"] as? String ?? ""
+        
+        let urlString = "https://\(urlSecondString)&x=\(longitude)&y=\(latitude)&radius=\(radius)"
+        
         
         guard let url = URL(string: urlString) else {
             return .failure(.invalidURL)
@@ -107,179 +111,8 @@ class PharmacyService {
             return .failure(.decodingError)
         }
     }
-    
-    // 두 위치 간 거리 계산 함수
-//    func distance(from location1: CLLocation, to location2: CLLocation) -> CLLocationDistance {
-//        return location1.distance(from: location2)
-//    }
 }
 
-
-/*
-// MARK: - PharmacyXMLParser 내부에서 호출되며, XML 응답 데이터를 Pharmacy 구조체에 매핑하는 데 사용됩니다. 단독으로는 API 요청을 수행하지 않으며, 단순히 데이터를 파싱하는 역할에 집중합니다.
-//  XML 데이터를 Pharmacy 구조체와 매핑하는 역할
-class PharmacyXMLParser: NSObject, XMLParserDelegate {
-    private var currentElement = ""
-    private var currentPharmacy = Pharmacy(name: "", latitude: 0.0, longitude: 0.0, address: "", city: [], roadAddress: "", phone: "")
-    private var pharmacies: [Pharmacy] = []
-
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
-        currentElement = elementName
-    }
-
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
-        let trimmedString = string.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedString.isEmpty else { return }
-        
-        switch currentElement {
-        case "dutyName":
-            currentPharmacy.name += trimmedString
-        case "dutyAddr":
-            currentPharmacy.address += trimmedString
-        case "dutyTel1":
-            currentPharmacy.phone += trimmedString
-        case "dutyTime1s":
-            currentPharmacy.operatingHours["mon_s"] = trimmedString
-        case "dutyTime1c":
-            currentPharmacy.operatingHours["mon_e"] = trimmedString
-        case "dutyTime2s":
-            currentPharmacy.operatingHours["tue_s"] = trimmedString
-        case "dutyTime2c":
-            currentPharmacy.operatingHours["tue_e"] = trimmedString
-        case "dutyTime3s":
-            currentPharmacy.operatingHours["wed_s"] = trimmedString
-        case "dutyTime3c":
-            currentPharmacy.operatingHours["wed_e"] = trimmedString
-        case "dutyTime4s":
-            currentPharmacy.operatingHours["thu_s"] = trimmedString
-        case "dutyTime4c":
-            currentPharmacy.operatingHours["thu_e"] = trimmedString
-        case "dutyTime5s":
-            currentPharmacy.operatingHours["fri_s"] = trimmedString
-        case "dutyTime5c":
-            currentPharmacy.operatingHours["fri_e"] = trimmedString
-        case "dutyTime6s":
-            currentPharmacy.operatingHours["sat_s"] = trimmedString
-        case "dutyTime6c":
-            currentPharmacy.operatingHours["sat_e"] = trimmedString
-        case "dutyTime7s":
-            currentPharmacy.operatingHours["sun_s"] = trimmedString
-        case "dutyTime7c":
-            currentPharmacy.operatingHours["sun_e"] = trimmedString
-        default:
-            break
-        }
-    }
-    
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        if elementName == "item" {
-            pharmacies.append(currentPharmacy)
-            currentPharmacy = Pharmacy(name: "", latitude: 0.0, longitude: 0.0, address: "", city: [], roadAddress: "", phone: "")
-        }
-    }
-    
-    func getParsedPharmacies() -> [Pharmacy] {
-        return pharmacies
-    }
-}
-
-
-// MARK: - PharmacyManager: PharmacyService와 비슷하게 API 호출을 관리하는 역할을 하며, 약국의 기본 정보와 추가 정보를 비동기적으로 요청합니다.
-class PharmacyManager {
-    static let shared = PharmacyManager()
-    private init() {}
-
-    // 데이터를 요청하고, XML 데이터로 응답을 받습니다.
-    func getPharmacyInfo_async_(q0: String, q1: String, pageNo: String, numOfRows: String, qn: String) async -> Pharmacy? {
-        let baseURL = "https://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyListInfoInqire"
-        let serviceKey = "vYvbOXShpiN13vBxmVUlC0kkxVrD%2B9V3EF7O41ExML40kZenS8KX1KYHEJcXpXhmtUm3WVdxnUWsGmDMjMQRBw%3D%3D"
-        let qt = "1"
-        let ord = "NAME"
-
-        guard let encodedQn = qn.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedQ0 = q0.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedQ1 = q1.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            print("Failed to encode URL parameters.")
-            return nil
-        }
-
-        let urlString = "\(baseURL)?serviceKey=\(serviceKey)&QT=\(qt)&QN=\(encodedQn)&ORD=\(ord)&pageNo=\(pageNo)&numOfRows=\(numOfRows)&Q0=\(encodedQ0)&Q1=\(encodedQ1)"
-
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL")
-            return nil
-        }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let parser = XMLParser(data: data)
-            let xmlParserDelegate = PharmacyXMLParser()
-            parser.delegate = xmlParserDelegate
-
-            if parser.parse(), let parsedPharmacy = xmlParserDelegate.getParsedPharmacies().first {
-                return parsedPharmacy
-            } else {
-                print("Failed to parse XML.")
-                return nil
-            }
-        } catch {
-            print("Error: \(error.localizedDescription)")
-            return nil
-        }
-    }
-    
-    // 데이터를 요청하고, XML 데이터로 응답을 받습니다.
-    func getPharmacyInfo_async(q0: String, q1: String, pageNo: String, numOfRows: String, qn: String) async -> Pharmacy? {
-        let baseURL = "https://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyListInfoInqire"
-        let serviceKey = "vYvbOXShpiN13vBxmVUlC0kkxVrD%2B9V3EF7O41ExML40kZenS8KX1KYHEJcXpXhmtUm3WVdxnUWsGmDMjMQRBw%3D%3D"
-        let qt = "1"
-        let ord = "NAME"
-
-        guard let encodedQn = qn.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedQ0 = q0.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedQ1 = q1.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            print("Failed to encode URL parameters.")
-            return nil
-        }
-
-        let urlString = "\(baseURL)?serviceKey=\(serviceKey)&QT=\(qt)&QN=\(encodedQn)&ORD=\(ord)&pageNo=\(pageNo)&numOfRows=\(numOfRows)&Q0=\(encodedQ0)&Q1=\(encodedQ1)"
-        
-        print("Request URL: \(urlString)") // 요청 URL 출력
-
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL")
-            return nil
-        }
-
-        do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            print("Received data size: \(data.count) bytes") // 데이터 크기 출력
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("HTTP Response Status Code: \(httpResponse.statusCode)") // HTTP 응답 코드 출력
-            }
-
-            let parser = XMLParser(data: data)
-            let xmlParserDelegate = PharmacyXMLParser()
-            parser.delegate = xmlParserDelegate
-
-            if parser.parse(), let parsedPharmacy = xmlParserDelegate.getParsedPharmacies().first {
-                print("Parsed pharmacy: \(parsedPharmacy.name)") // 파싱된 약국 이름 출력
-                return parsedPharmacy
-            } else {
-                print("Failed to parse XML or no pharmacies found.")
-                return nil
-            }
-        } catch {
-            print("Error: \(error.localizedDescription)")
-            return nil
-        }
-    }
-}
-
-
-*/
-// MARK: - PharmacyXMLParser
 // MARK: - PharmacyXMLParser
 class PharmacyXMLParser: NSObject, XMLParserDelegate {
     private var currentElement = ""
@@ -357,8 +190,11 @@ class PharmacyManager {
     static let shared = PharmacyManager()
     private init() {}
     func getPharmacyInfo_async(q0: String, q1: String, pageNo: String, numOfRows: String, qn: String) async -> Pharmacy? {
-            let baseURL = "https://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyListInfoInqire"
-            let serviceKey = "vYvbOXShpiN13vBxmVUlC0kkxVrD%2B9V3EF7O41ExML40kZenS8KX1KYHEJcXpXhmtUm3WVdxnUWsGmDMjMQRBw%3D%3D"
+            
+            let baseSecondURL = Bundle.main.infoDictionary?["PHARMACY_MANAGER_URL"] as? String ?? ""
+            let baseURL = "https://" + baseSecondURL
+        
+            let serviceKey = Bundle.main.infoDictionary?["PHARMACY_MANAGER_API_KEY"] ?? ""
             let qt = "1"
             let ord = "NAME"
 
@@ -404,56 +240,6 @@ class PharmacyManager {
                 return nil
             }
         }
-
-    func getPharmacyInfo_async_(q0: String, q1: String, pageNo: String, numOfRows: String, qn: String) async -> Pharmacy? {
-        let baseURL = "https://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyListInfoInqire"
-        let serviceKey = "vYvbOXShpiN13vBxmVUlC0kkxVrD%2B9V3EF7O41ExML40kZenS8KX1KYHEJcXpXhmtUm3WVdxnUWsGmDMjMQRBw%3D%3D"
-        let qt = "1"
-        let ord = "NAME"
-
-        guard let encodedQn = qn.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedQ0 = q0.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedQ1 = q1.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            print("Failed to encode URL parameters.")
-            return nil
-        }
-
-        let urlString = "\(baseURL)?serviceKey=\(serviceKey)&QT=\(qt)&QN=\(encodedQn)&ORD=\(ord)&pageNo=\(pageNo)&numOfRows=\(numOfRows)&Q0=\(encodedQ0)&Q1=\(encodedQ1)"
-        
-        print("Request URL: \(urlString)") // 요청 URL 출력
-
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL")
-            return nil
-        }
-
-        do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            print("Received data size: \(data.count) bytes") // 데이터 크기 출력
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("HTTP Response Status Code: \(httpResponse.statusCode)") // HTTP 응답 코드 출력
-            }
-
-            let parser = XMLParser(data: data)
-            let xmlParserDelegate = PharmacyXMLParser()
-            parser.delegate = xmlParserDelegate
-
-            if parser.parse(), let parsedPharmacy = xmlParserDelegate.getParsedPharmacies().first {
-                print("Parsed pharmacy: \(parsedPharmacy.name)") // 파싱된 약국 이름 출력
-                return parsedPharmacy
-            } else {
-                print("Failed to parse XML or no pharmacies found.")
-                return nil
-            }
-        } catch {
-            print("Error: \(error.localizedDescription)")
-            return nil
-        }
-    }
-    
-
-
 }
 
 
@@ -467,7 +253,7 @@ func testFetchPharmacyInfo() async {
     let qn = "한마음약국" // 검색할 약국 이름
 
     // PharmacyManager 인스턴스에서 함수 호출
-    if let pharmacy = await PharmacyManager.shared.getPharmacyInfo_async_(q0: q0, q1: q1, pageNo: pageNo, numOfRows: numOfRows, qn: qn) {
+    if let pharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: q0, q1: q1, pageNo: pageNo, numOfRows: numOfRows, qn: qn) {
         print("약국 이름: \(pharmacy.name)")
         print("주소: \(pharmacy.address)")
         print("전화번호: \(pharmacy.phone)")
@@ -477,13 +263,6 @@ func testFetchPharmacyInfo() async {
         print("약국 정보를 가져오는 데 실패했습니다.")
     }
 }
-
-
-//    .onAppear {
-//        Task {
-//            await testFetchPharmacyInfo()
-//        }
-//    }
 
 
 func timeStringToDate(_ timeString: String) -> Date? {
