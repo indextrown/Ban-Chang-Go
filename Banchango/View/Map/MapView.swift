@@ -249,7 +249,7 @@ struct MapView: View {
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(.mainorange)
+                                .fill(.maincolor)
                                 .frame(width: 50, height: 50)
                                 .overlay(
                                     Circle()

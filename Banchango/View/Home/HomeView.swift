@@ -108,7 +108,7 @@ struct LoadedView: View {
                         .padding(.leading, 20)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 70)
-                        .background(.green)
+                        .background(.maincolor)
 
                         VStack {
                             HStack {
@@ -200,7 +200,7 @@ struct LoadedView: View {
             viewModel.startPedometerUpdates()
             viewModel.fetchLast7DaysStepData()
         }
-        .background(VStack(spacing: .zero) { Color.green; Color.gray1 })
+        .background(VStack(spacing: .zero) { Color.maincolor; Color.gray1 })
         .ignoresSafeArea()
     }
          
@@ -228,6 +228,9 @@ final class PedometerViewModel: ObservableObject {
         // 앱이 시작될 때 CMPedometer에서 걸음 수 가져오기
         startPedometerUpdates()
     }
+    
+    
+    
     func startPedometerUpdates__() {
             let startOfToday = Calendar.current.startOfDay(for: Date())
             if CMPedometer.isStepCountingAvailable() {
@@ -491,7 +494,18 @@ struct GradientAreaChartExampleView: View {
 }
 
 
+
+
+
+
+
+
+
+
+
+
 /*
+ 
 // MARK: - legacy
 
 import SwiftUI

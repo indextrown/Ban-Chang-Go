@@ -35,7 +35,8 @@ struct MainTabView: View {
             }
         }
 
-        .tint(Color.mainorange) // 주황색으로 설정
+        //.tint(Color.mainorange) // 주황색으로 설정
+        .tint(Color.maincolor)
     }
     init() {
         UITabBar.appearance().backgroundColor = .white

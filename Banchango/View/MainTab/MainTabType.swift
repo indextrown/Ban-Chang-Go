@@ -17,7 +17,7 @@ enum MainTabType: String, CaseIterable {
         case .home:
             return "홈"
         case .map:
-            return "지도"
+            return "약국지도"
         case .profile:
             return "프로필"
         }
