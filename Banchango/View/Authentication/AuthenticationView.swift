@@ -23,6 +23,7 @@ struct AuthenticationView: View {
             case .unauthenticated:
                 LoginView()
                     .environmentObject(authVM) // 지울예정
+                
             case .nicknameRequired:
                 NicknameSettingView()
                     .environmentObject(authVM)
@@ -31,15 +32,24 @@ struct AuthenticationView: View {
         .onAppear {
             authVM.send(action: .checkAuthenticationState)
         }
-        .onChange(of: authVM.authenticationState) { oldState, newState in
-            // 인증된 상태로 변경될 때 닉네임 체크
-            if newState == .authenticated, let userId = authVM.userId {
-                authVM.send(action: .checkNickname(userId)) // 닉네임 체크
-            }
-        }
+        
+//        .onChange(of: authVM.authenticationState) { oldState, newState in
+//            
+//            // 인증된 상태로 변경될 때 닉네임 체크
+//            if newState == .authenticated, let userId = authVM.userId {
+//                print("인증상태 + userId존재: \(userId)")
+//                authVM.send(action: .checkNickname(userId)) // 닉네임 체크
+//            }
+//        }
     }
-    
 }
+
+
+
+
+
+
+
 
 
 

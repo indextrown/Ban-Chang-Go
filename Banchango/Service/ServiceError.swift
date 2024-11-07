@@ -9,7 +9,7 @@ import Foundation
 
 enum ServiceError: Error {
     case error(Error)
-    
+    case userNotFound
 
 }
 
@@ -18,6 +18,8 @@ extension ServiceError: LocalizedError {
         switch self {
         case .error(let dbError):
             return dbError.localizedDescription
+        case .userNotFound:
+            return "사용자를 찾을 수 없습니다."
         }
     }
 }

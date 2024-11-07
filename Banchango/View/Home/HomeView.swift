@@ -44,8 +44,8 @@ struct HomeView: View {
 struct LoadedView: View {
     @StateObject private var viewModel = PedometerViewModel()
     @EnvironmentObject private var homeVM: HomeViewModel
-    //@EnvironmentObject private var profileViewModel: ProfileViewModel
-    @State private var goalSteps: Int = 2000 // 기본 목표 걸음 수
+    @AppStorage("goalSteps") private var goalSteps: Int = 2000
+    
     @State private var scrollOffset: CGFloat = 0 // 스크롤 위치 제어를 위한 변수
     
     var body: some View {
@@ -57,11 +57,6 @@ struct LoadedView: View {
                 VStack(spacing: 0) {
                     ZStack {
                         VStack(alignment: .leading, spacing: 10) {
-//                            Text("반창고")
-//                                .font(.system(size: 30, weight: .bold))
-//                                .foregroundColor(.white)
-//                                .padding(.top, 0)
-//                                .padding(.bottom, 10)
                             Spacer()
                                 .frame(height: 30)
                             
@@ -99,9 +94,13 @@ struct LoadedView: View {
                             Spacer()
                                 .frame(height: 10)
                            
+
                             HStack {
                                 Spacer()
-                                Text("남은 걸음: \(goalSteps - viewModel.stepCount)")
+                                let remainSteps: Int = goalSteps - viewModel.stepCount
+                                
+                                //Text("남은 걸음: \(remainSteps > 0 ? remainSteps : 0)")
+                                Text(remainSteps > 0 ? "남은 걸음:  \(remainSteps)" : "달성완료")
                                     .font(.body)
                                     .font(.system(size: 15))
                                     .foregroundColor(.black)
@@ -212,8 +211,6 @@ struct LoadedView: View {
 //                                    .padding(.bottom, 20)
 //                                }
 
-
-                            
                         }
                         .padding()
                         .padding(.top, -120)
@@ -520,10 +517,20 @@ struct GradientAreaChartExampleView: View {
 
 
 
-//#Preview {
-//    HomeView(viewModel: .init(container: .init(services: StubService()), userId: "user1_id"))
-//}
+struct HomeView_Previews: PreviewProvider {
+    static var previews: some View {
+        let container = DIContainer(services: Services())
+        let authVM = AuthenticationViewModel(container: container)
+        
+        // HomeViewModel의 초기 상태를 .success로 설정하여 LoadedView가 표시되도록 합니다.
+        let homeVM = HomeViewModel(container: container, userId: "testUserId")
+        homeVM.phase = .success // phase를 성공 상태로 설정
 
+        return HomeView()
+            .environmentObject(authVM)
+            .environmentObject(homeVM)
+    }
+}
 
 
 //struct GradientAreaChartExampleView_Previews: PreviewProvider {

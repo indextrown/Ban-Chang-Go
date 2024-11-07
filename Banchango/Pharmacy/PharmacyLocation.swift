@@ -232,7 +232,7 @@ class PharmacyManager {
                     //print("Parsed pharmacy: \(parsedPharmacy.name)") // 파싱된 약국 이름 출력
                     return parsedPharmacy
                 } else {
-                    print("Failed to parse XML or no pharmacies found.")
+                    //print("Failed to parse XML or no pharmacies found.")
                     return nil
                 }
             } catch {

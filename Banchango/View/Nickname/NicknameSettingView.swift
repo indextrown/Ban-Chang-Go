@@ -11,6 +11,11 @@ struct NicknameSettingView: View {
     @State private var nickname: String = ""
     @EnvironmentObject var authVM: AuthenticationViewModel
     
+    // 닉네임이 유효한지 검사하는 프로퍼티
+    private var isNicknameValid: Bool {
+        !nickname.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    
     var body: some View {
         VStack {
             Text("닉네임을 설정해주세요")
@@ -22,6 +27,8 @@ struct NicknameSettingView: View {
             } label: {
                 Text("저장")
             }
+            .disabled(!isNicknameValid)
+            
         }
     }
 }

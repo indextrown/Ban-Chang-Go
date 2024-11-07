@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import AuthenticationServices
+import FirebaseAuth
 
 enum AuthenticationState {
     case unauthenticated
@@ -25,6 +26,7 @@ class AuthenticationViewModel: ObservableObject {
         case logout
         case updateNickname(String)
         case checkNickname(String)
+        case deleteAccount
     }
     
     @Published var authenticationState: AuthenticationState = .unauthenticated
@@ -48,18 +50,9 @@ class AuthenticationViewModel: ObservableObject {
             if let userId = container.services.authService.checkAuthenticationState() {
                 self.userId = userId
                 self.authenticationState = .authenticated // 사용자 ID가 있으면 인증 상태 변경
-                
                 print("UID: \(userId)")
                 print("이까진성공: \(self.authenticationState)")
             }
-            else {
-                self.authenticationState = .unauthenticated // 로그인 상태가 아닐 경우
-            }
-            //        case .checkAuthenticationState:
-            //            if let userId = container.services.authService.checkAuthenticationState() {
-            //                self.userId = userId
-            //                self.authenticationState = .authenticated
-            //            }
             
         case .logout:
             container.services.authService.logout()
@@ -70,60 +63,33 @@ class AuthenticationViewModel: ObservableObject {
                     self?.userId = nil
                 }.store(in: &subscriptions)
             
-            
         case .googleLogin:
             isLoading = true
             // MARK: - 구글 로그인 완료가 되면
             container.services.authService.signInWithGoogle()
-            // TODO: - db추가
                 .flatMap { user in
-                    self.container.services.userService.addUser(user)
+                    // 사용자가 존재하는지 확인 후, 없으면 addUser 호출
+                    self.container.services.userService.getUser(userId: user.id)
+                        .catch { error -> AnyPublisher<User, ServiceError> in
+                            // 다른 오류가 발생한 경우 그대로 에러를 반환
+                            return self.container.services.userService.addUser(user)
+                        }
                 }
-            // MARK: - 실패시
+                // MARK: - 실패시
                 .sink { [weak self] completion in
                     // TODO: - 실패시
                     if case .failure = completion {
                         self?.isLoading = false
                     }
-                    // MARK: - 성공시
+                // MARK: - 성공시
                 } receiveValue: { [weak self] user in
                     self?.isLoading = false
                     self?.userId = user.id // 유저정보가 오면 뷰모델에서 아이디 보유하도록
-                    self?.authenticationState = .authenticated
+                    self?.send(action: .checkNickname(user.id))
                 }.store(in: &subscriptions) // sink를 하면 subscriptions가 리턴된다 -> 뷰모델에서 관리
-            //subscriptions은 뷰모델에서 관리할건데 뷰모델에서 구독이 여러개 있을 수 있어서 set으로 관리하자
-            /*
-             case .googleLogin:
-             isLoading = true
-             container.services.authService.signInWithGoogle()
-             .flatMap { [weak self] user in
-             //                    self?.currentUser = user
-             
-             print("유저: \(user)")
-             // 사용자 정보를 가져온 후
-             return self?.container.services.userService.getUser(userId: user.id) ?? Empty().eraseToAnyPublisher()
-             }
-             .sink { [weak self] completion in
-             if case .failure = completion {
-             self?.isLoading = false
-             
-             }
-             } receiveValue: { [weak self] existingUser in
-             self?.isLoading = false
-             self?.currentUser = existingUser
-             self?.userId = existingUser.id
-             //print("Logged in User: \(existingUser)") // 추가: 로그인한 사용자 정보 출력
-             
-             //                    // 닉네임 유무 확인
-             //                    if existingUser.nickname?.isEmpty ?? true {
-             //                        self?.authenticationState = .nicknameRequired // 닉네임 설정 필요 상태로 변경
-             //                    } else {
-             //                        self?.authenticationState = .authenticated // 닉네임이 있으면 인증 상태 변경
-             //                    }
-             } .store(in: &subscriptions)
-             */
+                                            //subscriptions은 뷰모델에서 관리할건데 뷰모델에서 구독이 여러개 있을 수 있어서 set으로 관리하자
             
-            
+                   
         case let .appleLogin(request):
             let nonce = container.services.authService.handleSignInWithAppleRequest(request as! ASAuthorizationAppleIDRequest)
             currentNonce = nonce
@@ -135,7 +101,12 @@ class AuthenticationViewModel: ObservableObject {
                 container.services.authService.handleSignInWithAppleCompletion(authorization, none: nonce)
                     // TODO: - db추가
                     .flatMap { user in
-                        self.container.services.userService.addUser(user)
+                        // 사용자가 존재하는지 확인 후, 없으면 addUser 호출
+                        self.container.services.userService.getUser(userId: user.id)
+                            .catch { error -> AnyPublisher<User, ServiceError> in
+                                // 다른 오류가 발생한 경우 그대로 에러를 반환
+                                return self.container.services.userService.addUser(user)
+                            }
                     }
                     .sink { [weak self] completion in
                         // TODO: - 실패시
@@ -145,7 +116,7 @@ class AuthenticationViewModel: ObservableObject {
                     } receiveValue: { [weak self] user in
                         self?.isLoading = false
                         self?.userId = user.id
-                        self?.authenticationState = .authenticated
+                        self?.send(action: .checkNickname(user.id))
                     }.store(in: &subscriptions)
             } else if case let .failure(error) = result {
                 isLoading = false
@@ -167,19 +138,59 @@ class AuthenticationViewModel: ObservableObject {
                 }, receiveValue: { _ in })
                 .store(in: &subscriptions)
             
-        case .checkNickname(let userId): // 추가된 부분
+        case .checkNickname(let userId):
+            print("사용자 ID에 대한 닉네임 확인 중: \(userId)") // 한글 로그 추가
             container.services.userService.getUser(userId: userId)
                 .sink { completion in
                     if case .failure = completion {
-                        print("닉네임 체크 실패")
+                        print("사용자 정보를 가져오는 데 실패했습니다: \(completion)") // 한글 로그 추가
+                        self.authenticationState = .nicknameRequired
                     }
                 } receiveValue: { existingUser in
-                    if existingUser.nickname?.isEmpty ?? true {
-                        self.authenticationState = .nicknameRequired // 닉네임 설정 필요 상태로 변경
+                    print("받은 사용자 정보: \(existingUser)") // 한글 로그 추가
+                    if existingUser.nickname?.trimmingCharacters(in: .whitespaces).isEmpty ?? true {
+                        print("닉네임이 비어있거나 nil입니다.") // 한글 로그 추가
+                        self.authenticationState = .nicknameRequired
+                    } else {
+                        print("설정된 닉네임: \(existingUser.nickname!)") // 한글 로그 추가
+                        self.authenticationState = .authenticated
                     }
                 }
-                .store(in: &subscriptions) // 구독 저장
+                .store(in: &subscriptions)
+            
+        case .deleteAccount:
+            guard let userId = self.userId else { return }
+            
+            // 1단계: Realtime Database에서 유저 데이터를 삭제
+            container.services.userService.deleteUser(userId: userId)
+                .tryMap { _ -> FirebaseAuth.User in
+                    // 2단계: Firebase Auth 계정 삭제
+                    guard let currentUser = Auth.auth().currentUser else {
+                        throw ServiceError.userNotFound
+                    }
+                    return currentUser
+                }
+                .flatMap { currentUser -> AnyPublisher<Void, Error> in
+                    return Future<Void, Error> { promise in
+                        currentUser.delete { error in
+                            if let error = error {
+                                promise(.failure(error))
+                            } else {
+                                promise(.success(()))
+                            }
+                        }
+                    }.eraseToAnyPublisher()
+                }
+                .sink { completion in
+                    if case .failure(let error) = completion {
+                        print("계정 삭제 실패: \(error)")
+                    }
+                } receiveValue: { [weak self] _ in
+                    // 계정과 데이터가 성공적으로 삭제된 경우
+                    self?.authenticationState = .unauthenticated
+                    self?.userId = nil
+                }
+                .store(in: &subscriptions)
         }
     }
 }
-

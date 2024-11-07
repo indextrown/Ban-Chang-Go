@@ -11,6 +11,7 @@ enum DBError: Error {
     case error(Error)
     case emptyValue
     case invalidatedType
+    case userNotFound
 }
 
 extension DBError: LocalizedError {
@@ -22,6 +23,8 @@ extension DBError: LocalizedError {
             return "데이터베이스에 해당 사용자 정보가 없습니다."
         case .invalidatedType:
             return "유효하지 않은 데이터 타입입니다."
+        case .userNotFound:
+            return "사용자를 찾을 수 없습니다"
         }
     }
 }

@@ -53,7 +53,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
                         MapCamera(centerCoordinate: location.coordinate, distance: 4000, heading: 0, pitch: 0)
                     )
                     
-                    print("최초한번은 그냥 호출")
+                    //print("최초한번은 그냥 호출")
                     //self.fetchNearbyPharmacies()
                     self.debouncefetchNearbyPharmacies(for: location.coordinate)
                     self.isFirstUpdate = false
@@ -125,6 +125,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
                     // 운영 시간이 비어 있고, 새로운 약국들에 대해서만 세부 정보 요청 및 업데이트
                     for pharmacy in self.pharmacies where pharmacy.operatingHours.isEmpty {
                         let pharmacyKey = "\(pharmacy.name) \(pharmacy.address)"
+                  
+                        
                         
                         if !self.loadedPharmacies.contains(pharmacyKey) {
                             //print("Attempting to fetch details for:", pharmacyKey)
@@ -139,9 +141,50 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
                                     return
                                 }
                                  */
-                                guard let city = pharmacy.city.first, let lastCity = pharmacy.city.last else {
+                                guard let rawCity = pharmacy.city.first, let lastCity = pharmacy.city.last else {
                                     return
                                 }
+                                
+                                var city = rawCity
+                                
+                                switch city {
+                                    case "서울":
+                                        city = "서울특별시"
+                                    case "부산":
+                                        city = "부산광역시"
+                                    case "대구":
+                                        city = "대구광역시"
+                                    case "인천":
+                                        city = "인천광역시"
+                                    case "광주":
+                                        city = "광주광역시"
+                                    case "대전":
+                                        city = "대전광역시"
+                                    case "울산":
+                                        city = "울산광역시"
+                                    case "세종":
+                                        city = "세종특별자치시"
+                                    case "경기":
+                                        city = "경기도"
+                                    case "강원":
+                                        city = "강원도"
+                                    case "충북":
+                                        city = "충청북도"
+                                    case "충남":
+                                        city = "충청남도"
+                                    case "전북":
+                                        city = "전라북도"
+                                    case "전남":
+                                        city = "전라남도"
+                                    case "경북":
+                                        city = "경상북도"
+                                    case "경남":
+                                        city = "경상남도"
+                                    case "제주":
+                                        city = "제주특별자치도"
+                                    default:
+                                        break
+                                    }
                                 
                                 if let detailedPharmacy = await PharmacyManager.shared.getPharmacyInfo_async(q0: city, q1: lastCity, pageNo: "1", numOfRows: "10", qn: pharmacy.name) {
                                     DispatchQueue.main.async {
@@ -159,7 +202,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
                                         //print("Added to loadedPharmacies:", pharmacyKey)
                                     }
                                 } else {
-                                    print("Failed to fetch details for pharmacy:", pharmacyKey)
+                                    //print("Failed to fetch details for pharmacy:", pharmacyKey)
                                 }
                             }
                         }
@@ -171,8 +214,10 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             }
         }
     }
-
 }
+
+
+
 
 // SwiftUI View에서 LocationManager 사용
 struct MapView: View {
@@ -279,6 +324,7 @@ struct MapView: View {
 
 struct PharmacyDetailView: View {
     var pharmacy: Pharmacy
+    @State private var showCopyAlert = false
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -303,22 +349,52 @@ struct PharmacyDetailView: View {
             let today = getDay(from: Date())
             let hours = operatingHours(for: today, operatingHours: pharmacy.operatingHours)
             
-            // 약국 정보가 있을 때 표시
-            Text("\(hours.start) ~ \(hours.end)")
-                .font(.system(size: 15))
+            
+            HStack {
+                Image(systemName: "clock")
+                // 약국 정보가 있을 때 표시
+                Text("\(hours.start) ~ \(hours.end)")
+                    .font(.system(size: 15))
+            }
 
             Spacer()
                 .frame(height: 10)
 
-            Text("\(pharmacy.address)")
+            HStack {
+                Image(systemName: "mappin.circle")
+                Text("\(pharmacy.address)")
                     .font(.system(size: 15))
+            }
+            
+            Spacer()
+                .frame(height: 10)
   
-            Text("연락처: \(pharmacy.phone)")
-                .font(.system(size: 15))
+            HStack {
+                Image(systemName: "phone")
+                Text("\(pharmacy.phone)")
+                    .font(.system(size: 15))
+                
+                // 복사
+                Button {
+                    UIPasteboard.general.string = pharmacy.phone
+                    showCopyAlert = true
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .foregroundColor(.blue)
+                        .font(.system(size: 16))
+                        .padding(.leading, 5)
+                }
+                .alert("전화번호가 복사되었습니다", isPresented: $showCopyAlert) {
+                    Button("확인", role: .cancel) {}
+                }
+            }
 
             Text("운영시간:")
-                .font(.system(size: 15))
+                .font(.system(size: 23, weight: .bold))
                 .padding(.top, 30)
+            
+            Spacer()
+                .frame(height: 10)
             
             VStack(alignment: .leading, spacing: 5) {
                Text("월요일: \(formattedOperatingHours(for: "월요일"))")
@@ -328,7 +404,8 @@ struct PharmacyDetailView: View {
                Text("금요일: \(formattedOperatingHours(for: "금요일"))")
                Text("토요일: \(formattedOperatingHours(for: "토요일"))")
                Text("일요일: \(formattedOperatingHours(for: "일요일"))")
-           }
+            }
+            .font(.system(size: 15))
             
 //            Text("\(pharmacy.operatingHours)")
 //            Spacer()
@@ -345,3 +422,27 @@ struct PharmacyDetailView: View {
     }
 }
 
+struct PharmacyDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        let samplePharmacy = Pharmacy(
+            name: "샘플 약국",
+            latitude: 37.5665,
+            longitude: 126.9780,
+            address: "서울특별시 강남구 테헤란로 123",
+            city: ["서울특별시", "강남구"],
+            roadAddress: "서울특별시 강남구 테헤란로 123",
+            phone: "02-123-4567",
+            operatingHours: [
+                "월요일": "09:00 - 18:00",
+                "화요일": "09:00 - 18:00",
+                "수요일": "09:00 - 18:00",
+                "목요일": "09:00 - 18:00",
+                "금요일": "09:00 - 18:00",
+                "토요일": "10:00 - 14:00",
+                "일요일": "휴무"
+            ]
+        )
+        
+        PharmacyDetailView(pharmacy: samplePharmacy)
+    }
+}

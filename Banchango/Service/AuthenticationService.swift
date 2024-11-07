@@ -33,9 +33,14 @@ protocol AuthenticationServiceType {
     
     // 로그아웃
     func logout() -> AnyPublisher<Void, ServiceError>
+    
+    // 탈퇴
+    func deleteUser() -> AnyPublisher<Void, ServiceError>
 }
 
 class AuthenticationService: AuthenticationServiceType {
+    
+    
     
     // 컴플리션 핸들러이다. -> 퍼블리셔를 위에서 만들자
     // Combine 방식의 인터페이스로 외부에 제공하는 역할을 하고, Combine을 사용하는 ViewModel이나 서비스에서 쉽게 구독할 수 있습니다.
@@ -92,6 +97,22 @@ class AuthenticationService: AuthenticationServiceType {
                 promise(.success(()))
             } catch {
                 promise(.failure(.error(error)))
+            }
+        }.eraseToAnyPublisher()
+    }
+    
+    func deleteUser() -> AnyPublisher<Void, ServiceError> {
+        Future { promise in
+            guard let user = Auth.auth().currentUser else {
+                promise(.failure(.userNotFound))
+                return
+            }
+            user.delete { error in
+                if let error = error {
+                    promise(.failure(.error(error)))
+                } else {
+                    promise(.success(()))
+                }
             }
         }.eraseToAnyPublisher()
     }
@@ -204,6 +225,7 @@ extension AuthenticationService {
 }
 
 class StubAuthenticationService: AuthenticationServiceType {
+
     
     func signInWithGoogle() -> AnyPublisher<User, ServiceError> {
         Empty().eraseToAnyPublisher()
@@ -225,6 +247,9 @@ class StubAuthenticationService: AuthenticationServiceType {
         Empty().eraseToAnyPublisher()
     }
     
+    func deleteUser() -> AnyPublisher<Void, ServiceError> {
+        Empty().eraseToAnyPublisher()
+    }
 }
 
 

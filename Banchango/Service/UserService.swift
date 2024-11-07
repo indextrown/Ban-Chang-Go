@@ -14,10 +14,12 @@ protocol UserServiceType {
     func getUser(userId: String) -> AnyPublisher<User, ServiceError>
     func loadUsers(id: String) -> AnyPublisher<[User], ServiceError>
     func updateUserNickname(userId: String, nickname: String) -> AnyPublisher<Void, ServiceError> // 추가
-    
+    func deleteUser(userId: String) -> AnyPublisher<Void, ServiceError>
 }
 
 class UserService: UserServiceType {
+    private var subscriptions = Set<AnyCancellable>() // subscriptions 추가
+    
     private var dbRepository: UserDBRepositoryType
     
     init(deRepository: UserDBRepositoryType) {
@@ -34,9 +36,16 @@ class UserService: UserServiceType {
     func getUser(userId: String) -> AnyPublisher<User, ServiceError> {
         dbRepository.getUser(userId: userId)
             .map { $0.toModel() }
-            .mapError { .error($0) }
+            .mapError { dbError in
+                if case .emptyValue = dbError {
+                    return .userNotFound
+                } else {
+                    return .error(dbError)
+                }
+            }
             .eraseToAnyPublisher()
     }
+
     
     func loadUsers(id: String) -> AnyPublisher<[User], ServiceError> {
         dbRepository.loadUsers()
@@ -54,6 +63,22 @@ class UserService: UserServiceType {
                 .mapError { .error($0) }
                 .eraseToAnyPublisher()
         }
+    
+    func deleteUser(userId: String) -> AnyPublisher<Void, ServiceError> {
+        Future { promise in
+            // 데이터베이스에서 사용자 삭제 로직
+            self.dbRepository.deleteUser(userId: userId) // dbRepository를 사용하여 삭제
+                .sink { completion in
+                    if case .failure(let error) = completion {
+                        promise(.failure(.error(error)))
+                    }
+                } receiveValue: {
+                    promise(.success(()))
+                }
+                .store(in: &self.subscriptions) // subscriptions에 저장
+        }
+        .eraseToAnyPublisher()
+    }
 }
 
 class StubUserService: UserServiceType {
@@ -71,6 +96,9 @@ class StubUserService: UserServiceType {
     
     func loadUsers(id: String) -> AnyPublisher<[User], ServiceError> {
         Just([.stub1, .stub2]).setFailureType(to: ServiceError.self).eraseToAnyPublisher()
+    }
+    func deleteUser(userId: String) -> AnyPublisher<Void, ServiceError> {
+        Empty().eraseToAnyPublisher()
     }
 }
 
