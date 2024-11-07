@@ -15,17 +15,34 @@ struct BanchangoApp: App {
     var body: some Scene {
         WindowGroup {
             let container = DIContainer(services: Services())
-            if isFirstLaunching {
-                    OnboardingView(isFirstLaunching: $isFirstLaunching)
-                } else {
-                    AuthenticationView(authVM: AuthenticationViewModel(container: container))
-                        .environmentObject(container)
-                }
-            
-//            // AuthenticationView에 DIContainer 주입
-//            AuthenticationView(authVM: AuthenticationViewModel(container: container))
-//                .environmentObject(container) // DIContainer를 environmentObject로 주입
-//  
+            AuthenticationView(
+                authVM: .init(container: container)
+    
+            )
+            .environmentObject(container)
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+// 일단주석
+//            if isFirstLaunching {
+//                //OnboardingContentView(onboardingViewModel: .init())
+//                } else {
+//                    AuthenticationView(authVM: AuthenticationViewModel(container: container))
+//                        .environmentObject(container)
+//                }
+
+//            // AuthenticationView에 DIContainer 주입
+//            AuthenticationView(authVM: AuthenticationViewModel(container: container))
+//                .environmentObject(container) // DIContainer를 environmentObject로 주입
+//

@@ -8,9 +8,7 @@
 import SwiftUI
 import AuthenticationServices
 
-
 struct LoginView: View {
-    
     @EnvironmentObject var authViewModel: AuthenticationViewModel
 
     var body: some View {
@@ -62,8 +60,6 @@ struct LoginView: View {
         }
     }
 }
-
-
 
 #Preview {
     LoginView(authViewModel: .init())

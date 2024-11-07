@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum MainTabType: String, CaseIterable {
+enum MainTabType2: String, CaseIterable {
     case home
     case map
     case profile

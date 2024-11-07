@@ -52,10 +52,11 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
                     self.position = .camera(
                         MapCamera(centerCoordinate: location.coordinate, distance: 4000, heading: 0, pitch: 0)
                     )
-                    self.isFirstUpdate = false
+                    
                     print("최초한번은 그냥 호출")
                     //self.fetchNearbyPharmacies()
                     self.debouncefetchNearbyPharmacies(for: location.coordinate)
+                    self.isFirstUpdate = false
                 }
             }
 

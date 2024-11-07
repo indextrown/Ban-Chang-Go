@@ -9,4 +9,15 @@ import Foundation
 
 enum ServiceError: Error {
     case error(Error)
+    
+
+}
+
+extension ServiceError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .error(let dbError):
+            return dbError.localizedDescription
+        }
+    }
 }
