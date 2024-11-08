@@ -27,6 +27,9 @@
 		DF9171AE2CD6286E00E5FC22 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9171AD2CD6286E00E5FC22 /* ProfileView.swift */; };
 		DF96972C2CD689D500B130F8 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = DF96972B2CD689D500B130F8 /* FirebaseDatabase */; };
 		DF9697312CD68E3F00B130F8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DF9697302CD68E3F00B130F8 /* GoogleService-Info.plist */; };
+		DFA3367F2CDDA9A800380DA5 /* NoticeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA3367E2CDDA9A800380DA5 /* NoticeDetailView.swift */; };
+		DFA336832CDDAA4100380DA5 /* 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA336822CDDAA4100380DA5 /* 2.swift */; };
+		DFA336852CDDAB2A00380DA5 /* LegacyNoticeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA336842CDDAB2A00380DA5 /* LegacyNoticeService.swift */; };
 		DFB6697A2CD6952E00708BC8 /* NicknameSettingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB669792CD6952E00708BC8 /* NicknameSettingView.swift */; };
 		DFB6697C2CD6AA1A00708BC8 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB6697B2CD6AA1A00708BC8 /* HomeViewModel.swift */; };
 		DFB72A662CD629610095021C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB72A652CD629610095021C /* LoginView.swift */; };
@@ -76,6 +79,9 @@
 		DF9171AD2CD6286E00E5FC22 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		DF96972D2CD68CFC00B130F8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DF9697302CD68E3F00B130F8 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		DFA3367E2CDDA9A800380DA5 /* NoticeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeDetailView.swift; sourceTree = "<group>"; };
+		DFA336822CDDAA4100380DA5 /* 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = 2.swift; sourceTree = "<group>"; };
+		DFA336842CDDAB2A00380DA5 /* LegacyNoticeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyNoticeService.swift; sourceTree = "<group>"; };
 		DFB669772CD68F9700708BC8 /* Banchango.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Banchango.entitlements; sourceTree = "<group>"; };
 		DFB669792CD6952E00708BC8 /* NicknameSettingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameSettingView.swift; sourceTree = "<group>"; };
 		DFB6697B2CD6AA1A00708BC8 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
@@ -244,8 +250,7 @@
 			isa = PBXGroup;
 			children = (
 				DF9171AD2CD6286E00E5FC22 /* ProfileView.swift */,
-				DF07D1F12CDCF2ED0058DF11 /* NicknameEditView.swift */,
-				DF07D1EF2CDCF2CF0058DF11 /* NoticeView.swift */,
+				DFA336802CDDAA1B00380DA5 /* Notice */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -255,6 +260,17 @@
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DFA336802CDDAA1B00380DA5 /* Notice */ = {
+			isa = PBXGroup;
+			children = (
+				DFA3367E2CDDA9A800380DA5 /* NoticeDetailView.swift */,
+				DF07D1F12CDCF2ED0058DF11 /* NicknameEditView.swift */,
+				DF07D1EF2CDCF2CF0058DF11 /* NoticeView.swift */,
+				DFA336822CDDAA4100380DA5 /* 2.swift */,
+			);
+			path = Notice;
 			sourceTree = "<group>";
 		};
 		DFB669782CD6951A00708BC8 /* Nickname */ = {
@@ -279,6 +295,7 @@
 			children = (
 				DFF73C612CD64AB6006D8E72 /* Services.swift */,
 				DFF73C632CD64AC0006D8E72 /* AuthenticationService.swift */,
+				DFA336842CDDAB2A00380DA5 /* LegacyNoticeService.swift */,
 				DFF73CCC2CD64EE7006D8E72 /* UserService.swift */,
 				DFF73C652CD64ADF006D8E72 /* ServiceError.swift */,
 			);
@@ -433,11 +450,13 @@
 				DFF73C6A2CD64B06006D8E72 /* RandomNonceString.swift in Sources */,
 				DFB6697A2CD6952E00708BC8 /* NicknameSettingView.swift in Sources */,
 				DF9171AE2CD6286E00E5FC22 /* ProfileView.swift in Sources */,
+				DFA336852CDDAB2A00380DA5 /* LegacyNoticeService.swift in Sources */,
 				DF9171AC2CD6286600E5FC22 /* MapView.swift in Sources */,
 				DF9171A02CD6279D00E5FC22 /* AuthenticationViewModel.swift in Sources */,
 				DF1E8F5D2CD8F28E00BC6245 /* PharmacyLocation.swift in Sources */,
 				DF07D1F02CDCF2CF0058DF11 /* NoticeView.swift in Sources */,
 				DFF73C6E2CD64B3A006D8E72 /* User.swift in Sources */,
+				DFA336832CDDAA4100380DA5 /* 2.swift in Sources */,
 				DFB72A662CD629610095021C /* LoginView.swift in Sources */,
 				DF6427322CD94B520077CD8F /* OnboardingView.swift in Sources */,
 				DF4930552CD742C600183A4A /* Rect.swift in Sources */,
@@ -453,6 +472,7 @@
 				DF9171AA2CD6285A00E5FC22 /* HomeView.swift in Sources */,
 				DF9171A52CD627CD00E5FC22 /* MainTabType.swift in Sources */,
 				DF9171A32CD627B700E5FC22 /* MainTabView.swift in Sources */,
+				DFA3367F2CDDA9A800380DA5 /* NoticeDetailView.swift in Sources */,
 				DFF73C642CD64AC0006D8E72 /* AuthenticationService.swift in Sources */,
 				DFF73CC92CD64C1E006D8E72 /* Constant.swift in Sources */,
 				DFF73C662CD64ADF006D8E72 /* ServiceError.swift in Sources */,

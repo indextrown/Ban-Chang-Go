@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import FirebaseDatabase
 
 class HomeViewModel: ObservableObject {
     enum Action {
@@ -15,14 +16,17 @@ class HomeViewModel: ObservableObject {
     
     @Published var myUser: User?
     @Published var phase: Phase = .notRequested
+    @Published var notices: [Notice] = []
     
     private var userId: String
     private var container: DIContainer
     private var subscriptions = Set<AnyCancellable>()
+    private var db: DatabaseReference
     
     init(container: DIContainer, userId: String) {
         self.container = container
         self.userId = userId
+        self.db = Database.database().reference() // Firebase Database 초기화
     }
     
     func send(action: Action) {
@@ -48,6 +52,5 @@ class HomeViewModel: ObservableObject {
                 }.store(in: &subscriptions)
             return
         }
-    
     }
 }

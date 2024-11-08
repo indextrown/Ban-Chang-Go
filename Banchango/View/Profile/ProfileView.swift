@@ -11,6 +11,7 @@ import Combine
 struct ProfileView: View {
     @EnvironmentObject var authVM: AuthenticationViewModel
     @EnvironmentObject var homeVM: HomeViewModel
+    @StateObject private var noticeVM = NoticeViewModel()
 
     @State private var nickname: String = ""
     @State private var isEditing: Bool = false
@@ -52,9 +53,7 @@ struct ProfileView: View {
                             .sheet(isPresented: $isEditing) {
                                 NicknameEditView(isEditing: $isEditing, nickname: $nickname, profileVM: homeVM, authVM: authVM)
                             }
-                        
-                        
-                        
+
                         // 공지사항 및 버전 정보
                         /*
                          RectViewHC(height: 100, color: .white, radius: 15)
@@ -95,7 +94,7 @@ struct ProfileView: View {
                         RectViewHC(height: 100, color: .white, radius: 15)
                             .overlay {
                                 VStack(spacing: 0) {
-                                    NavigationLink(destination: NoticeView()) {
+                                    NavigationLink(destination: NoticeView(noticeVM: noticeVM)) {
                                         HStack {
                                             Text("공지사항")
                                                 .foregroundColor(.black)
@@ -121,12 +120,18 @@ struct ProfileView: View {
                                         }
                                         .padding(.leading, 20)
                                     }
+//                                    NavigationLink(destination: NoticeView()) {
+//                                        HStack {
+//                                            Text("문의하기")
+//                                                .foregroundColor(.black)
+//                                                .padding(.bottom, 12.5)
+//                                            Spacer()
+//                                        }
+//                                        .padding(.leading, 20)
+//                                    }
                                 }
                             }
-                        
-                        
-                        
-                        
+
                         RectViewHC(height: 100, color: .white, radius: 15)
                             .overlay {
                                 VStack(spacing: 0) {
@@ -160,10 +165,6 @@ struct ProfileView: View {
                                     }
                                 }
                             }
-                        
-                        
-                        
-                        
                         
                         // 계정 탈퇴 버튼
                         RectViewHC(height: 50, color: .white, radius: 15)
@@ -205,11 +206,12 @@ struct ProfileView: View {
                         )
                     }
                 }
-                //.navigationTitle("설정")
             }
-            
         }
-        
+        .onAppear {
+            noticeVM.loadNotices() // ProfileView가 나타날 때 공지사항 로드
+            print("공지실행")
+        }
     }
 }
 
@@ -226,6 +228,11 @@ struct ProfileView_Previews: PreviewProvider {
             .environmentObject(homeVM)
     }
 }
+
+
+
+
+
 
 
 
