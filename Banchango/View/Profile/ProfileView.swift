@@ -17,6 +17,11 @@ struct ProfileView: View {
     @State private var isEditing: Bool = false
     @State private var showDeleteConfiguration = false
     
+    var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+        return version
+    }
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -110,7 +115,12 @@ struct ProfileView: View {
                                         .padding(.horizontal, 15)
                                     
                                     Button {
+                                        let urlSecondString = Bundle.main.infoDictionary?["KAKAO_OPENCHAT_URL"] as? String ?? ""
+                                        
                                         // 버전 정보 동작
+                                        if let url = URL(string: "https://\(urlSecondString)") {
+                                            UIApplication.shared.open(url)
+                                        }
                                     } label: {
                                         HStack {
                                             Text("문의하기")
@@ -136,10 +146,15 @@ struct ProfileView: View {
                             .overlay {
                                 VStack(spacing: 0) {
                                     Button {
-                                        // 공지사항 동작
+                                        
+                                        let urlSecondString = Bundle.main.infoDictionary?["NOTION_URL"] as? String ?? ""
+                                        
+                                        if let url = URL(string: "https://\(urlSecondString)") {
+                                            UIApplication.shared.open(url)
+                                        }
                                     } label: {
                                         HStack {
-                                            Text("이용약관")
+                                            Text("개인정보처리방침")
                                                 .foregroundColor(.black)
                                                 .padding(.bottom, 12.5)
                                             Spacer()
@@ -152,17 +167,17 @@ struct ProfileView: View {
                                         .frame(height: 1)
                                         .padding(.horizontal, 15)
                                     
-                                    Button {
-                                        // 버전 정보 동작
-                                    } label: {
-                                        HStack {
-                                            Text("버전정보")
-                                                .foregroundColor(.black)
-                                                .padding(.top, 12.5)
-                                            Spacer()
-                                        }
-                                        .padding(.leading, 20)
+                                    HStack {
+                                        Text("버전정보")
+                                            .foregroundColor(.black)
+                                            .padding(.top, 12.5)
+                                        Spacer()
+                                        
+                                        Text(appVersion)
+                                            .padding(.top, 12.5)
                                     }
+                                    .padding(.horizontal, 20)
+
                                 }
                             }
                         

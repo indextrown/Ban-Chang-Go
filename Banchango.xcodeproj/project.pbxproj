@@ -28,7 +28,6 @@
 		DF96972C2CD689D500B130F8 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = DF96972B2CD689D500B130F8 /* FirebaseDatabase */; };
 		DF9697312CD68E3F00B130F8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DF9697302CD68E3F00B130F8 /* GoogleService-Info.plist */; };
 		DFA3367F2CDDA9A800380DA5 /* NoticeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA3367E2CDDA9A800380DA5 /* NoticeDetailView.swift */; };
-		DFA336832CDDAA4100380DA5 /* 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA336822CDDAA4100380DA5 /* 2.swift */; };
 		DFA336852CDDAB2A00380DA5 /* LegacyNoticeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA336842CDDAB2A00380DA5 /* LegacyNoticeService.swift */; };
 		DFB6697A2CD6952E00708BC8 /* NicknameSettingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB669792CD6952E00708BC8 /* NicknameSettingView.swift */; };
 		DFB6697C2CD6AA1A00708BC8 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB6697B2CD6AA1A00708BC8 /* HomeViewModel.swift */; };
@@ -80,7 +79,6 @@
 		DF96972D2CD68CFC00B130F8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DF9697302CD68E3F00B130F8 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		DFA3367E2CDDA9A800380DA5 /* NoticeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeDetailView.swift; sourceTree = "<group>"; };
-		DFA336822CDDAA4100380DA5 /* 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = 2.swift; sourceTree = "<group>"; };
 		DFA336842CDDAB2A00380DA5 /* LegacyNoticeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyNoticeService.swift; sourceTree = "<group>"; };
 		DFB669772CD68F9700708BC8 /* Banchango.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Banchango.entitlements; sourceTree = "<group>"; };
 		DFB669792CD6952E00708BC8 /* NicknameSettingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameSettingView.swift; sourceTree = "<group>"; };
@@ -268,7 +266,6 @@
 				DFA3367E2CDDA9A800380DA5 /* NoticeDetailView.swift */,
 				DF07D1F12CDCF2ED0058DF11 /* NicknameEditView.swift */,
 				DF07D1EF2CDCF2CF0058DF11 /* NoticeView.swift */,
-				DFA336822CDDAA4100380DA5 /* 2.swift */,
 			);
 			path = Notice;
 			sourceTree = "<group>";
@@ -456,7 +453,6 @@
 				DF1E8F5D2CD8F28E00BC6245 /* PharmacyLocation.swift in Sources */,
 				DF07D1F02CDCF2CF0058DF11 /* NoticeView.swift in Sources */,
 				DFF73C6E2CD64B3A006D8E72 /* User.swift in Sources */,
-				DFA336832CDDAA4100380DA5 /* 2.swift in Sources */,
 				DFB72A662CD629610095021C /* LoginView.swift in Sources */,
 				DF6427322CD94B520077CD8F /* OnboardingView.swift in Sources */,
 				DF4930552CD742C600183A4A /* Rect.swift in Sources */,

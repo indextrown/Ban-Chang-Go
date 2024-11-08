@@ -389,7 +389,7 @@ struct PharmacyDetailView: View {
                 }
             }
 
-            Text("운영시간:")
+            Text("운영시간")
                 .font(.system(size: 23, weight: .bold))
                 .padding(.top, 30)
             
