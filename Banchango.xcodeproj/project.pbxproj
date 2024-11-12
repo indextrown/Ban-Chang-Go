@@ -32,7 +32,6 @@
 		DFB6697C2CD6AA1A00708BC8 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB6697B2CD6AA1A00708BC8 /* HomeViewModel.swift */; };
 		DFB72A662CD629610095021C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB72A652CD629610095021C /* LoginView.swift */; };
 		DFB72A682CD62A3D0095021C /* SocialLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB72A672CD62A3D0095021C /* SocialLoginButton.swift */; };
-		DFF60D822CE32EFE006239A5 /* 반창고.png in Resources */ = {isa = PBXBuildFile; fileRef = DFF60D812CE32EFE006239A5 /* 반창고.png */; };
 		DFF73C582CD649E1006D8E72 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DFF73C572CD649E1006D8E72 /* FirebaseAuth */; };
 		DFF73C5A2CD64A31006D8E72 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF73C592CD64A31006D8E72 /* AppDelegate.swift */; };
 		DFF73C5D2CD64A56006D8E72 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = DFF73C5C2CD64A56006D8E72 /* GoogleSignIn */; };
@@ -85,7 +84,6 @@
 		DFB72A652CD629610095021C /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		DFB72A672CD62A3D0095021C /* SocialLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLoginButton.swift; sourceTree = "<group>"; };
 		DFF60D7F2CE32EA7006239A5 /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
-		DFF60D812CE32EFE006239A5 /* 반창고.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "반창고.png"; sourceTree = "<group>"; };
 		DFF73C592CD64A31006D8E72 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DFF73C612CD64AB6006D8E72 /* Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
 		DFF73C632CD64AC0006D8E72 /* AuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationService.swift; sourceTree = "<group>"; };
@@ -147,7 +145,6 @@
 			isa = PBXGroup;
 			children = (
 				DF80FAAA2CD7C6DF00BB91AA /* .gitignore */,
-				DFF60D802CE32EC8006239A5 /* Img */,
 				DFF60D7F2CE32EA7006239A5 /* readme.md */,
 				DF91718E2CD6274500E5FC22 /* Banchango */,
 				DF91718D2CD6274500E5FC22 /* Products */,
@@ -298,14 +295,6 @@
 			path = Login;
 			sourceTree = "<group>";
 		};
-		DFF60D802CE32EC8006239A5 /* Img */ = {
-			isa = PBXGroup;
-			children = (
-				DFF60D812CE32EFE006239A5 /* 반창고.png */,
-			);
-			name = Img;
-			sourceTree = "<group>";
-		};
 		DFF73C602CD64A9B006D8E72 /* Service */ = {
 			isa = PBXGroup;
 			children = (
@@ -443,7 +432,6 @@
 			files = (
 				DF80FAAB2CD7C6DF00BB91AA /* .gitignore in Resources */,
 				DF9171972CD6274600E5FC22 /* Preview Assets.xcassets in Resources */,
-				DFF60D822CE32EFE006239A5 /* 반창고.png in Resources */,
 				DF4930512CD73E6500183A4A /* Colors.xcassets in Resources */,
 				DF9171942CD6274600E5FC22 /* Assets.xcassets in Resources */,
 				DF9697312CD68E3F00B130F8 /* GoogleService-Info.plist in Resources */,
