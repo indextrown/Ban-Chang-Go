@@ -20,8 +20,8 @@ class OnboardingViewModel: ObservableObject {
     
     init(
         onboardingcontents: [OnboardingContent] = [
-            .init(imageFileName: "onboarding_1", title: "제목1", subTitle: "내용1"),
-            .init(imageFileName: "onboarding_2", title: "제목2", subTitle: "내용2")
+            .init(imageFileName: "onboarding1", title: "제목1", subTitle: "내용1"),
+            .init(imageFileName: "onboarding2", title: "제목2", subTitle: "내용2")
         ]
     ) {
         self.onboardingcontents = onboardingcontents

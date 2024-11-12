@@ -15,8 +15,8 @@ import Foundation
 struct Pharmacy: Codable, Hashable, Identifiable {
     var id: UUID = UUID()
     var name: String        // 약국이름
-    let latitude: Double    // 위도
-    let longitude: Double   // 경도
+    var latitude: Double    // 위도
+    var longitude: Double   // 경도
     var address: String     // 주소
     let city: [String]      // [시, 군]
     let roadAddress: String // 도로명 주소
@@ -119,23 +119,28 @@ class PharmacyXMLParser: NSObject, XMLParserDelegate {
     private var currentPharmacy = Pharmacy(name: "", latitude: 0.0, longitude: 0.0, address: "", city: [], roadAddress: "", phone: "")
     private var pharmacies: [Pharmacy] = []
     
-    // XML 시작 태그를 만났을 때 호출되는 메서드
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
         currentElement = elementName
     }
     
-    // XML 태그 내의 값을 발견했을 때 호출되는 메서드
     func parser(_ parser: XMLParser, foundCharacters string: String) {
         let trimmedString = string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedString.isEmpty else { return }
         
-        // 디버깅: 현재 요소와 값을 출력
         switch currentElement {
         case "dutyName":
             currentPharmacy.name += trimmedString
         case "dutyAddr":
             currentPharmacy.address += trimmedString
-        case "dutyTel1": // 전화번호 태그 처리
+        case "wgs84Lat": // 위도 처리
+            if let latitude = Double(trimmedString) {
+                currentPharmacy.latitude = latitude
+            }
+        case "wgs84Lon": // 경도 처리
+            if let longitude = Double(trimmedString) {
+                currentPharmacy.longitude = longitude
+            }
+        case "dutyTel1":
             currentPharmacy.phone += trimmedString
         case "dutyTime1s":
             currentPharmacy.operatingHours["mon_s"] = trimmedString
@@ -170,7 +175,6 @@ class PharmacyXMLParser: NSObject, XMLParserDelegate {
         }
     }
     
-    // XML 종료 태그를 만났을 때 호출되는 메서드
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         if elementName == "item" {
             pharmacies.append(currentPharmacy)
@@ -178,11 +182,11 @@ class PharmacyXMLParser: NSObject, XMLParserDelegate {
         }
     }
     
-    // 파싱된 약국 정보를 반환하는 메서드
     func getParsedPharmacies() -> [Pharmacy] {
         return pharmacies
     }
 }
+
 
 
 // MARK: - PharmacyManager
@@ -240,6 +244,51 @@ class PharmacyManager {
                 return nil
             }
         }
+    
+    func getPharmaciesInfo_async(q0: String, q1: String, pageNo: String, numOfRows: String, qn: String) async -> [Pharmacy]? {
+        let baseSecondURL = Bundle.main.infoDictionary?["PHARMACY_MANAGER_URL"] as? String ?? ""
+        let baseURL = "https://" + baseSecondURL
+        let serviceKey = Bundle.main.infoDictionary?["PHARMACY_MANAGER_API_KEY"] ?? ""
+        let qt = "1"
+        let ord = "NAME"
+
+        guard let encodedQn = qn.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let encodedQ0 = q0.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let encodedQ1 = q1.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            print("Failed to encode URL parameters.")
+            return nil
+        }
+
+        let urlString = "\(baseURL)?serviceKey=\(serviceKey)&QT=\(qt)&QN=\(encodedQn)&ORD=\(ord)&pageNo=\(pageNo)&numOfRows=\(numOfRows)&Q0=\(encodedQ0)&Q1=\(encodedQ1)"
+
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
+            return nil
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            // 디버깅: API로부터 받은 XML 데이터 출력
+
+            let parser = XMLParser(data: data)
+            let xmlParserDelegate = PharmacyXMLParser()
+            parser.delegate = xmlParserDelegate
+
+            if parser.parse() {
+                let parsedPharmacies = xmlParserDelegate.getParsedPharmacies()
+                //print("Parsed Pharmacies: \(parsedPharmacies)")
+                return parsedPharmacies
+            } else {
+                print("Failed to parse XML or no pharmacies found.")
+                return nil
+            }
+        } catch {
+            print("Error: \(error.localizedDescription)")
+            return nil
+        }
+
+    }
+
 }
 
 
@@ -270,7 +319,6 @@ func timeStringToDate(_ timeString: String) -> Date? {
     guard timeComponents.count == 2,
           let hour = Int(timeComponents[0]),
           let minute = Int(timeComponents[1]) else {
-        print("잘못된 시간 형식: \(timeString)")
         return nil
     }
     

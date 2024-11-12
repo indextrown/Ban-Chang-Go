@@ -62,6 +62,7 @@ struct LoadedView: View {
                             
                             HStack {
                                 Text("\(homeVM.myUser?.nickname ?? "닉네임")")
+//                                Text("홍길동")
                                     .font(.system(size: 30, weight: .bold))
                                     .foregroundColor(.white)
                                     
@@ -73,6 +74,7 @@ struct LoadedView: View {
                             
                             HStack {
                                 Text("\(viewModel.stepCount)걸음")
+                               
                                     .font(.system(size: 30, weight: .bold))
                                     .foregroundColor(.lightGreen)
                                 

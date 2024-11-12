@@ -13,11 +13,10 @@ struct BanchangoApp: App {
     @AppStorage("_isFirstLaunching") var isFirstLaunching: Bool = true
     
     var body: some Scene {
-        WindowGroup {
+        WindowGroup {         
             let container = DIContainer(services: Services())
             AuthenticationView(
                 authVM: .init(container: container)
-    
             )
             .environmentObject(container)
         }
@@ -28,21 +27,3 @@ struct BanchangoApp: App {
 
 
 
-
-
-
-
-
-
-// 일단주석
-//            if isFirstLaunching {
-//                //OnboardingContentView(onboardingViewModel: .init())
-//                } else {
-//                    AuthenticationView(authVM: AuthenticationViewModel(container: container))
-//                        .environmentObject(container)
-//                }
-
-//            // AuthenticationView에 DIContainer 주입
-//            AuthenticationView(authVM: AuthenticationViewModel(container: container))
-//                .environmentObject(container) // DIContainer를 environmentObject로 주입
-//

@@ -23,7 +23,7 @@ struct ProfileView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.gray1
                     .edgesIgnoringSafeArea(.all)
@@ -57,45 +57,12 @@ struct ProfileView: View {
                             }
                             .sheet(isPresented: $isEditing) {
                                 NicknameEditView(isEditing: $isEditing, nickname: $nickname, profileVM: homeVM, authVM: authVM)
+                                    .onDisappear {
+                                        // 키보드 닫기
+                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                    }
                             }
 
-                        // 공지사항 및 버전 정보
-                        /*
-                         RectViewHC(height: 100, color: .white, radius: 15)
-                         .overlay {
-                         VStack(spacing: 0) {
-                         Button {
-                         // 공지사항 동작
-                         } label: {
-                         HStack {
-                         Text("공지사항")
-                         .foregroundColor(.black)
-                         .padding(.bottom, 12.5)
-                         Spacer()
-                         }
-                         .padding(.leading, 20)
-                         }
-                         
-                         Rectangle()
-                         .fill(Color.gray.opacity(0.4))
-                         .frame(height: 1)
-                         .padding(.horizontal, 15)
-                         
-                         Button {
-                         // 버전 정보 동작
-                         } label: {
-                         HStack {
-                         Text("버전")
-                         .foregroundColor(.black)
-                         .padding(.top, 12.5)
-                         Spacer()
-                         }
-                         .padding(.leading, 20)
-                         }
-                         }
-                         }
-                         */
-                        
                         RectViewHC(height: 100, color: .white, radius: 15)
                             .overlay {
                                 VStack(spacing: 0) {
@@ -130,15 +97,6 @@ struct ProfileView: View {
                                         }
                                         .padding(.leading, 20)
                                     }
-//                                    NavigationLink(destination: NoticeView()) {
-//                                        HStack {
-//                                            Text("문의하기")
-//                                                .foregroundColor(.black)
-//                                                .padding(.bottom, 12.5)
-//                                            Spacer()
-//                                        }
-//                                        .padding(.leading, 20)
-//                                    }
                                 }
                             }
 
@@ -225,7 +183,6 @@ struct ProfileView: View {
         }
         .onAppear {
             noticeVM.loadNotices() // ProfileView가 나타날 때 공지사항 로드
-            print("공지실행")
         }
     }
 }
@@ -250,64 +207,3 @@ struct ProfileView_Previews: PreviewProvider {
 
 
 
-
-
-
-
-/*
-RectViewHC(height: 150, color: .white, radius: 15) // 높이를 200으로 늘려 버튼 4개 공간 확보
-    .overlay {
-        VStack(spacing: 0) {
-            // 첫 번째 버튼
-            Button {
-                // 첫 번째 버튼 동작
-            } label: {
-                HStack {
-                    Text("공지사항")
-                        .foregroundColor(.black)
-                        .padding(.vertical, 12.5)
-                    Spacer()
-                }
-                .padding(.leading, 20)
-            }
-            
-            // 첫 번째 버튼과 두 번째 버튼 사이 분리선
-            Rectangle()
-                .fill(Color.gray.opacity(0.4))
-                .frame(height: 1)
-                .padding(.horizontal, 15)
-            
-            // 두 번째 버튼
-            Button {
-                // 두 번째 버튼 동작
-            } label: {
-                HStack {
-                    Text("이용약관")
-                        .foregroundColor(.black)
-                        .padding(.vertical, 12.5)
-                    Spacer()
-                }
-                .padding(.leading, 20)
-            }
-            
-            // 두 번째 버튼과 세 번째 버튼 사이 분리선
-            Rectangle()
-                .fill(Color.gray.opacity(0.4))
-                .frame(height: 1)
-                .padding(.horizontal, 15)
-            
-            // 세 번째 버튼
-            Button {
-                // 세 번째 버튼 동작
-            } label: {
-                HStack {
-                    Text("문의하기")
-                        .foregroundColor(.black)
-                        .padding(.vertical, 12.5)
-                    Spacer()
-                }
-                .padding(.leading, 20)
-            }
-        }
-    }
-*/

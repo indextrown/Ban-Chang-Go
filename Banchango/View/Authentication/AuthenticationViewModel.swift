@@ -50,8 +50,8 @@ class AuthenticationViewModel: ObservableObject {
             if let userId = container.services.authService.checkAuthenticationState() {
                 self.userId = userId
                 self.authenticationState = .authenticated // 사용자 ID가 있으면 인증 상태 변경
-                print("UID: \(userId)")
-                print("이까진성공: \(self.authenticationState)")
+//                print("UID: \(userId)")
+//                print("이까진성공: \(self.authenticationState)")
             }
             
         case .logout:
@@ -139,20 +139,20 @@ class AuthenticationViewModel: ObservableObject {
                 .store(in: &subscriptions)
             
         case .checkNickname(let userId):
-            print("사용자 ID에 대한 닉네임 확인 중: \(userId)") // 한글 로그 추가
+            //print("사용자 ID에 대한 닉네임 확인 중: \(userId)") // 한글 로그 추가
             container.services.userService.getUser(userId: userId)
                 .sink { completion in
                     if case .failure = completion {
-                        print("사용자 정보를 가져오는 데 실패했습니다: \(completion)") // 한글 로그 추가
+                        //print("사용자 정보를 가져오는 데 실패했습니다: \(completion)") // 한글 로그 추가
                         self.authenticationState = .nicknameRequired
                     }
                 } receiveValue: { existingUser in
-                    print("받은 사용자 정보: \(existingUser)") // 한글 로그 추가
+                    //print("받은 사용자 정보: \(existingUser)") // 한글 로그 추가
                     if existingUser.nickname?.trimmingCharacters(in: .whitespaces).isEmpty ?? true {
-                        print("닉네임이 비어있거나 nil입니다.") // 한글 로그 추가
+                        //print("닉네임이 비어있거나 nil입니다.") // 한글 로그 추가
                         self.authenticationState = .nicknameRequired
                     } else {
-                        print("설정된 닉네임: \(existingUser.nickname!)") // 한글 로그 추가
+                        //print("설정된 닉네임: \(existingUser.nickname!)") // 한글 로그 추가
                         self.authenticationState = .authenticated
                     }
                 }
