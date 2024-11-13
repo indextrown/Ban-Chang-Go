@@ -282,7 +282,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         }
         
         // 디바운스 딜레이 설정 (0.6초)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: debounceWorkItem!)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: debounceWorkItem!)
     }
     
     // 도시 이름 변환 함수
@@ -402,8 +402,6 @@ struct MapView: View {
                                     self.showDetailView.toggle()
                                 }
                             }
-                        
-                            //showDetailView.toggle() ///
                         } label: {
                             Image(systemName: "pill.circle")
                                 .resizable()
@@ -497,10 +495,6 @@ struct MapView: View {
                     )
                     .padding(.horizontal, 20) // 외부 여백 추가
                 }
-
-                
-
-           
                 
                 Spacer()
                 
@@ -545,7 +539,7 @@ struct PharmacyDetailView: View {
     @State private var showCopyAlert = false
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading) {
                 HStack {
                     Text(pharmacy.name)
@@ -650,10 +644,11 @@ struct PharmacyDetailView: View {
                 }
                 .padding(.top, 10)
             }
+            .padding()
+            .navigationTitle("약국 상세 정보")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .padding()
-        .navigationTitle("약국 상세 정보")
-        .navigationBarTitleDisplayMode(.inline)
+        
     }
     // 특정 요일에 대한 운영 시간을 가져오는 함수
     private func formattedOperatingHours(for day: String) -> String {
@@ -667,6 +662,7 @@ struct PharmacyDetailView: View {
 struct PharmacyDetailView_Previews: PreviewProvider {
     static var previews: some View {
         // 샘플 약국 데이터를 생성합니다.
+        /*
         let samplePharmacy = Pharmacy(
             name: "샘플 약국",
             latitude: 37.5665,
@@ -685,7 +681,7 @@ struct PharmacyDetailView_Previews: PreviewProvider {
                 "일요일": "휴무"
             ]
         )
-
+        */
         // State를 사용하여 detent 값을 관리하고 이를 Binding으로 전달합니다.
         StateWrapper()
             .previewLayout(.sizeThatFits)
