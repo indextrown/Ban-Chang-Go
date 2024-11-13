@@ -361,11 +361,6 @@ extension CLLocationCoordinate2D {
     }
 }
 
-
-
-
-
-
 // SwiftUI View에서 LocationManager 사용
 struct MapView: View {
     @StateObject private var viewModel = LocationManager()
@@ -373,6 +368,7 @@ struct MapView: View {
     @State private var showDetailView = false // 모달 표시 여부
     @State private var searchText: String = "" // 검색어 저장
     @State private var selectedPharmacy: Pharmacy? // 선택된 검색 결과
+    @State private var detent: PresentationDetent = .fraction(0.2) // 시트 크기를 관리하는 상태 변수
 
     var body: some View {
         ZStack {
@@ -427,11 +423,11 @@ struct MapView: View {
                 viewModel.debouncefetchNearbyPharmacies(for: centerCoordinate)
             }
             //.ignoresSafeArea()
-            // 모달 뷰 표시
+
             .sheet(item: $selectedPlace) { place in
-                // 선택된 장소가 있을 경우 모달 뷰를 표시
-                PharmacyDetailView(pharmacy: place)
-                    .presentationDetents([.fraction(0.2)])  // 모달 뷰가 화면의 절반만 차지하도록 설정
+                PharmacyDetailView(pharmacy: place, detent: $detent)
+                    .presentationDetents([.fraction(0.2), .fraction(0.67)], selection: $detent)
+                    .presentationDragIndicator(.hidden)// 선택 가능 크기 지정
             }
             
             VStack {
@@ -538,124 +534,127 @@ struct MapView: View {
     }
 }
 
-#Preview {
-    MapView()
-}
+//#Preview {
+//    MapView()
+//}
 
 struct PharmacyDetailView: View {
     var pharmacy: Pharmacy
+    @Binding var detent: PresentationDetent // 시트 크기 상태를 바인딩으로 연결
+
     @State private var showCopyAlert = false
-    
 
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                Text(pharmacy.name)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                Spacer()
-                
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(pharmacy.isOpen ? .red : .gray)
-                        .frame(width: 100, height: 40)
+        ScrollView {
+            VStack(alignment: .leading) {
+                HStack {
+                    Text(pharmacy.name)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
                     
-                    Text(pharmacy.isOpen ? "영업중" : "영업종료")
-                        .foregroundColor(pharmacy.isOpen ? .red : .gray)
-                }
-            }
-            
-            Spacer()
-                .frame(height: 10)
-            
-            let today = getDay(from: Date())
-            let hours = operatingHours(for: today, operatingHours: pharmacy.operatingHours)
-            
-            // 시간
-            HStack {
-                Image(systemName: "clock")
-                
-                // 약국 정보가 있을 때 표시
-                Text("\(hours.start) ~ \(hours.end)")
-                    .font(.system(size: 15))
-            }
-
-            Spacer()
-                .frame(height: 10)
-
-            // 주소
-            HStack {
-                Image(systemName: "mappin.circle")
-                Text("\(pharmacy.address)")
-                    .font(.system(size: 15))
-            }
-            
-            Spacer()
-                .frame(height: 10)
-  
-            // 전화번호
-            HStack {
-                Image(systemName: "phone")
-                Text("\(pharmacy.phone)")
-                    .font(.system(size: 15))
-                
-                // 복사
-                Button {
-                    UIPasteboard.general.string = pharmacy.phone
-                    showCopyAlert = true
-                } label: {
-                    Image(systemName: "doc.on.doc")
-                        .foregroundColor(.blue)
-                        .font(.system(size: 16))
-                        .padding(.leading, 5)
-                }
-                .alert("전화번호가 복사되었습니다", isPresented: $showCopyAlert) {
-                    Button("확인", role: .cancel) {}
-                }
-            }
-
-            // 운영시간
-            
-            /*
-            Text("운영시간")
-                .font(.system(size: 23, weight: .bold))
-                .padding(.top, 30)
-            
-            Spacer()
-                .frame(height: 10)
-            VStack(alignment: .leading, spacing: 5) {
-                ForEach(["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"], id: \.self) { day in
-                    HStack {
-                        Text(day.prefix(1)) // 요일 첫 글자만 표시
-                            .font(.system(size: 15, weight: .bold))
-                            .frame(width: 30)
-                            .foregroundColor(day == "토요일" || day == "일요일" ? .red : .primary) // 주말 강조
-                        
-//                        Spacer()
-                        
-                        Text(formattedOperatingHours(for: day))
-                            .font(.system(size: 15))
-                            .padding(6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(day == "토요일" || day == "일요일" ? Color.red.opacity(0.1) : Color.gray.opacity(0.1)) // 주말 강조 배경
-                            )
-                           
+                    Button {
+                        // 유효한 detent 값만 설정
+                        if detent == .fraction(0.2) {
+                            detent = .fraction(0.67) // 확장
+                        } else {
+                            detent = .fraction(0.2) // 축소
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .padding(.leading, 5)
+                            .foregroundColor(.gray)
                     }
-                    .padding(.vertical, 4) // 요일 간 간격
+                    
+                    Spacer()
+                    
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(pharmacy.isOpen ? .red : .gray)
+                            .frame(width: 100, height: 40)
+                        
+                        Text(pharmacy.isOpen ? "영업중" : "영업종료")
+                            .foregroundColor(pharmacy.isOpen ? .red : .gray)
+                    }
                 }
+                
+                Spacer()
+                    .frame(height: 10)
+                
+                let today = getDay(from: Date())
+                let hours = operatingHours(for: today, operatingHours: pharmacy.operatingHours)
+                
+                HStack {
+                    Image(systemName: "clock")
+                    Text("\(hours.start) ~ \(hours.end)")
+                        .font(.system(size: 15))
+                }
+                
+                Spacer()
+                    .frame(height: 10)
+                
+                HStack {
+                    Image(systemName: "mappin.circle")
+                    Text("\(pharmacy.address)")
+                        .font(.system(size: 15))
+                }
+                
+                Spacer()
+                    .frame(height: 10)
+                
+                HStack {
+                    Image(systemName: "phone")
+                    Text("\(pharmacy.phone)")
+                        .font(.system(size: 15))
+                    
+                    Button {
+                        UIPasteboard.general.string = pharmacy.phone
+                        showCopyAlert = true
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 16))
+                            .padding(.leading, 5)
+                    }
+                    .alert("전화번호가 복사되었습니다", isPresented: $showCopyAlert) {
+                        Button("확인", role: .cancel) {}
+                    }
+                }
+                
+                Text("운영시간")
+                    .font(.system(size: 23, weight: .bold))
+                    .padding(.top, 30)
+                
+                Spacer()
+                    .frame(height: 10)
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"], id: \.self) { day in
+                        HStack {
+                            Text(day.prefix(1)) // 요일 첫 글자만 표시
+                                .font(.system(size: 15, weight: .bold))
+                                .frame(width: 30)
+                                .foregroundColor(day == "토요일" || day == "일요일" ? .red : .primary) // 주말 강조
+                            
+                            //                        Spacer()
+                            
+                            Text(formattedOperatingHours(for: day))
+                                .font(.system(size: 15))
+                                .padding(6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(day == "토요일" || day == "일요일" ? Color.red.opacity(0.1) : Color.gray.opacity(0.1)) // 주말 강조 배경
+                                )
+                            
+                        }
+                        .padding(.vertical, 4) // 요일 간 간격
+                    }
+                }
+                .padding(.top, 10)
             }
-            .padding(.top, 10)
-             */
-            
-        
-    
         }
         .padding()
         .navigationTitle("약국 상세 정보")
         .navigationBarTitleDisplayMode(.inline)
     }
-    
     // 특정 요일에 대한 운영 시간을 가져오는 함수
     private func formattedOperatingHours(for day: String) -> String {
         let hours = operatingHours(for: day, operatingHours: pharmacy.operatingHours)
@@ -663,27 +662,61 @@ struct PharmacyDetailView: View {
     }
 }
 
-//struct PharmacyDetailView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        let samplePharmacy = Pharmacy(
-//            name: "샘플 약국",
-//            latitude: 37.5665,
-//            longitude: 126.9780,
-//            address: "서울특별시 강남구 테헤란로 123",
-//            city: ["서울특별시", "강남구"],
-//            roadAddress: "서울특별시 강남구 테헤란로 123",
-//            phone: "02-123-4567",
-//            operatingHours: [
-//                "월요일": "09:00 - 18:00",
-//                "화요일": "09:00 - 18:00",
-//                "수요일": "09:00 - 18:00",
-//                "목요일": "09:00 - 18:00",
-//                "금요일": "09:00 - 18:00",
-//                "토요일": "10:00 - 14:00",
-//                "일요일": "휴무"
-//            ]
-//        )
-//        
-//        PharmacyDetailView(pharmacy: samplePharmacy)
-//    }
-//}
+
+
+struct PharmacyDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        // 샘플 약국 데이터를 생성합니다.
+        let samplePharmacy = Pharmacy(
+            name: "샘플 약국",
+            latitude: 37.5665,
+            longitude: 126.9780,
+            address: "서울특별시 강남구 테헤란로 123",
+            city: ["서울특별시", "강남구"],
+            roadAddress: "서울특별시 강남구 테헤란로 123",
+            phone: "02-123-4567",
+            operatingHours: [
+                "월요일": "09:00 - 18:00",
+                "화요일": "09:00 - 18:00",
+                "수요일": "09:00 - 18:00",
+                "목요일": "09:00 - 18:00",
+                "금요일": "09:00 - 18:00",
+                "토요일": "10:00 - 14:00",
+                "일요일": "휴무"
+            ]
+        )
+
+        // State를 사용하여 detent 값을 관리하고 이를 Binding으로 전달합니다.
+        StateWrapper()
+            .previewLayout(.sizeThatFits)
+    }
+
+    // State를 관리하기 위한 래퍼 뷰
+    struct StateWrapper: View {
+        @State private var detent: PresentationDetent = .fraction(0.2)
+
+        var body: some View {
+            PharmacyDetailView(
+                pharmacy: Pharmacy(
+                    name: "샘플 약국",
+                    latitude: 37.5665,
+                    longitude: 126.9780,
+                    address: "서울특별시 강남구 테헤란로 123",
+                    city: ["서울특별시", "강남구"],
+                    roadAddress: "서울특별시 강남구 테헤란로 123",
+                    phone: "02-123-4567",
+                    operatingHours: [
+                        "월요일": "09:00 - 18:00",
+                        "화요일": "09:00 - 18:00",
+                        "수요일": "09:00 - 18:00",
+                        "목요일": "09:00 - 18:00",
+                        "금요일": "09:00 - 18:00",
+                        "토요일": "10:00 - 14:00",
+                        "일요일": "휴무"
+                    ]
+                ),
+                detent: $detent
+            )
+        }
+    }
+}
