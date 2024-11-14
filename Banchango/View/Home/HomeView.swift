@@ -194,25 +194,6 @@ struct LoadedView: View {
                                         .padding(.trailing, -20) // 필요 시 오른쪽 여백 제거
                                         .padding(.bottom, 20)
                                 }
-
-//                            RectViewH(height: 270, color: .white)
-//                                .overlay {
-//                                    // 직접 샘플 데이터를 전달
-//                                    GradientAreaChartExampleView(stepData: [
-//                                        StepData(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, steps: 3000),
-//                                        StepData(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, steps: 5000),
-//                                        StepData(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, steps: 7000),
-//                                        StepData(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, steps: 6000),
-//                                        StepData(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, steps: 8000),
-//                                        StepData(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, steps: 7500),
-//                                        StepData(date: Date(), steps: 6500)
-//                                    ])
-//                                    .padding(.top, 50)
-//                                    .padding(.leading, 20) // 차트를 오른쪽으로 이동
-//                                    .padding(.trailing, -20) // 필요 시 오른쪽 여백 제거
-//                                    .padding(.bottom, 20)
-//                                }
-
                         }
                         .padding()
                         .padding(.top, -120)
@@ -461,15 +442,15 @@ struct GradientAreaChartExampleView: View {
     var body: some View {
         Chart {
             ForEach(stepData) { data in
-                LineMark(x: .value("Date", data.date),
-                         y: .value("Steps", data.steps))
-                    .foregroundStyle(.mainorange)
-                    .interpolationMethod(.cardinal)
-                
                 AreaMark(x: .value("Date", data.date),
                          y: .value("Steps", data.steps))
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(linearGradient)
+                
+                LineMark(x: .value("Date", data.date),
+                         y: .value("Steps", data.steps))
+                    .foregroundStyle(.mainorange)
+                    .interpolationMethod(.cardinal)
                 
                 PointMark(x: .value("Date", data.date),
                           y: .value("Steps", data.steps))
@@ -535,23 +516,3 @@ struct HomeView_Previews: PreviewProvider {
 }
 
 
-//struct GradientAreaChartExampleView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        // 테스트용 샘플 데이터 생성
-//        let calendar = Calendar.current
-//        let today = calendar.startOfDay(for: Date())
-//        
-//        // 지난 6일치 데이터와 오늘 날짜를 포함한 데이터를 생성
-//        let testStepData: [StepData] = (0...6).map { dayOffset in
-//            let date = calendar.date(byAdding: .day, value: -dayOffset, to: today)!
-//            return StepData(date: date, steps: Int.random(in: 1000...8000))
-//        }.reversed() // 날짜가 오름차순이 되도록 뒤집기
-//        
-//        // 샘플 데이터를 사용하여 GradientAreaChartExampleView를 미리보기에서 확인
-//        GradientAreaChartExampleView(stepData: testStepData)
-//            .padding()
-//            .previewLayout(.sizeThatFits)
-//    }
-//}
-//
-//

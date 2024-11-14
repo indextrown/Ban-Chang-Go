@@ -313,7 +313,6 @@ func testFetchPharmacyInfo() async {
     }
 }
 
-
 func timeStringToDate(_ timeString: String) -> Date? {
     let timeComponents = timeString.components(separatedBy: ":")
     guard timeComponents.count == 2,
@@ -345,23 +344,42 @@ func timeStringToDate(_ timeString: String) -> Date? {
     return date
 }
 // 현재 시간과 영업 시간을 비교하는 함수
+
 func isOpenNow(startTime: String, endTime: String) -> Bool {
     let currentTime = Date() // 현재 시간
+
+    // 시작 시간과 종료 시간을 변환
     guard let startDate = timeStringToDate(startTime),
-          let endDate = timeStringToDate(endTime) else {
+          let adjustedEndTime = adjustEndTime(endTime),
+          let endDate = timeStringToDate(adjustedEndTime) else {
         return false
     }
-    
-    //print("현재 시간: \(currentTime), 시작 시간: \(startDate), 종료 시간: \(endDate)")
-    
-    // 영업 종료 시간이 자정을 넘어가는 경우 처리
-    if endDate < startDate {
-        // 현재 시간이 영업 시작보다 이후이거나, 자정을 넘은 시간을 처리
+
+    // 종료 시간이 새벽으로 넘어가는 경우: 두 조건을 모두 확인
+    if endTime > "24:00" {
         return currentTime >= startDate || currentTime <= endDate
     } else {
-        // 일반적인 경우, 시작 시간과 종료 시간 사이에 있는지 확인
+        // 일반적인 경우
         return currentTime >= startDate && currentTime <= endDate
     }
+}
+
+// 종료 시간을 조정하는 함수
+func adjustEndTime(_ endTime: String) -> String? {
+    let timeComponents = endTime.components(separatedBy: ":")
+    guard timeComponents.count == 2,
+          let hour = Int(timeComponents[0]),
+          let minute = Int(timeComponents[1]) else {
+        return nil
+    }
+
+    // 시간이 24시를 넘는 경우 처리
+    if hour >= 24 {
+        let adjustedHour = hour - 24
+        return String(format: "%02d:%02d", adjustedHour, minute)
+    }
+
+    return endTime // 24시 이하인 경우 그대로 반환
 }
 
 // 요일 확인
@@ -373,6 +391,7 @@ func getDay(from date: Date) -> String {
     let day = dateFormatter.string(from: date)
     return day
 }
+
 // 시간을 "1100" -> "11:00" 형식으로 변환
 func formatTime(_ time: String) -> String {
     guard time.count == 4 else { return time }

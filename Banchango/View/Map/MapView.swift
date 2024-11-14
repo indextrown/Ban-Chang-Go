@@ -368,7 +368,7 @@ struct MapView: View {
     @State private var showDetailView = false // 모달 표시 여부
     @State private var searchText: String = "" // 검색어 저장
     @State private var selectedPharmacy: Pharmacy? // 선택된 검색 결과
-    @State private var detent: PresentationDetent = .fraction(0.2) // 시트 크기를 관리하는 상태 변수
+    @State private var detent: PresentationDetent = .fraction(0.18) // 시트 크기를 관리하는 상태 변수
 
     var body: some View {
         ZStack {
@@ -424,7 +424,7 @@ struct MapView: View {
 
             .sheet(item: $selectedPlace) { place in
                 PharmacyDetailView(pharmacy: place, detent: $detent)
-                    .presentationDetents([.fraction(0.2), .fraction(0.67)], selection: $detent)
+                    .presentationDetents([.fraction(0.18), .fraction(0.67)], selection: $detent)
                     .presentationDragIndicator(.hidden)// 선택 가능 크기 지정
             }
             
@@ -548,15 +548,18 @@ struct PharmacyDetailView: View {
                     
                     Button {
                         // 유효한 detent 값만 설정
-                        if detent == .fraction(0.2) {
+                        if detent == .fraction(0.18) {
                             detent = .fraction(0.67) // 확장
                         } else {
-                            detent = .fraction(0.2) // 축소
+                            detent = .fraction(0.18) // 축소
                         }
                     } label: {
-                        Image(systemName: "ellipsis")
+                        Image(systemName: (detent == .fraction(0.18)) ? "ellipsis.circle" : "arrow.down")
+                            .font(.system(size: 23))
                             .padding(.leading, 5)
                             .foregroundColor(.gray)
+                            .font(.title)
+                            
                     }
                     
                     Spacer()
@@ -689,7 +692,7 @@ struct PharmacyDetailView_Previews: PreviewProvider {
 
     // State를 관리하기 위한 래퍼 뷰
     struct StateWrapper: View {
-        @State private var detent: PresentationDetent = .fraction(0.2)
+        @State private var detent: PresentationDetent = .fraction(0.18)
 
         var body: some View {
             PharmacyDetailView(

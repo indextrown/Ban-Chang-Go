@@ -1,8 +1,8 @@
 //
-//  OnboardingView.swift
+//  OnboardingContentView.swift
 //  Banchango
 //
-//  Created by 김동현 on 11/5/24.
+//  Created by 김동현 on 11/14/24.
 //
 
 import SwiftUI
@@ -20,8 +20,21 @@ class OnboardingViewModel: ObservableObject {
     
     init(
         onboardingcontents: [OnboardingContent] = [
-            .init(imageFileName: "onboarding1", title: "제목1", subTitle: "내용1"),
-            .init(imageFileName: "onboarding2", title: "제목2", subTitle: "내용2")
+            .init(imageFileName: "onboarding1",
+                  title: "나의 걸음 기록",
+                  subTitle: "한눈에 보이는 나의 걸음"),
+            
+            .init(imageFileName: "onboarding2",
+                  title: "주변 약국 찾기",
+                  subTitle: "주변 약국 정보를 간편하게"),
+            
+            .init(imageFileName: "onboarding3",
+                  title: "약국 상세 정보",
+                  subTitle: "운영시간과 상세 정보를 한눈에"),
+            
+            .init(imageFileName: "onboarding4",
+                  title: "약국 검색",
+                  subTitle: "원하는 약국을 빠르게 찾기")
         ]
     ) {
         self.onboardingcontents = onboardingcontents
@@ -41,10 +54,11 @@ struct OnboardingContentView: View {
             OnboardingCellListView(onboardingViewModel: onboardingViewModel)
             
             Spacer()
+                .frame(height: 50)
             
             StartBtnView()
         }
-        .edgesIgnoringSafeArea(.top)
+//       .edgesIgnoringSafeArea(.top)
     }
 }
 
@@ -85,6 +99,7 @@ private struct OnboardingCellView: View {
             Image(onboardingContent.imageFileName)
                 .resizable()
                 .scaledToFit()
+                .cornerRadius(10)
             
             HStack {
                 Spacer()
@@ -97,10 +112,10 @@ private struct OnboardingCellView: View {
                         .font(.system(size: 16, weight: .bold))
                     
                     Spacer()
-                      .frame(height: 5)
+                        .frame(height: 5)
                     
                     Text(onboardingContent.subTitle)
-                      .font(.system(size: 16))
+                        .font(.system(size: 16))
                 }
                 
                 Spacer()
@@ -108,44 +123,52 @@ private struct OnboardingCellView: View {
             .background(.white)
             .cornerRadius(0)
         }
+        .padding(.top, 20)
         .shadow(radius: 10)
+        
+        
     }
+    
 }
 
 private struct StartBtnView: View {
-    //@Binding var isFirstLaunching: Bool
+//    @Binding var isFirstLaunching: Bool
+    @AppStorage("_isFirstLaunching") private var isFirstLaunching: Bool = true
     fileprivate var body: some View {
         Button {
-
+            isFirstLaunching = false // 온보딩 종료
         } label: {
-            Text("시작하기")
-              .font(.system(size: 16, weight: .medium))
-              .foregroundColor(.green)
+            HStack {
+                Text("시작하기")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.green)
+                
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.green)
+            }
             
-//            Image("startHome")
-//              .renderingMode(.template)
-//              .foregroundColor(.customGreen)
         }
-        .padding(.bottom, 50)
+        .padding(.bottom, 20)
     }
 }
 
 
 
-
+/*
 struct OnboardingView2: View {
     @Binding var isFirstLaunching: Bool
     @State private var currentTab = 0
 
         var body: some View {
             TabView(selection: $currentTab) {
-                Image("onboarding_1")
+                Image("onboarding11")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
                     .tag(0)
                 
-                Image("onboarding_2")
+                Image("onboarding12")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
@@ -173,34 +196,8 @@ struct OnboardingView2: View {
             .ignoresSafeArea()
         }
 }
+ */
 
 #Preview {
     OnboardingContentView(onboardingViewModel: .init())
 }
-
-
-//
-//struct OnboardingView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        // 프리뷰용 State 변수를 만들어 Binding으로 전달
-//        StatefulPreviewWrapper(true) { isFirstLaunching in
-//            OnboardingView(isFirstLaunching: isFirstLaunching)
-//        }
-//    }
-//}
-//
-//// State 변수를 간단히 Wrapping하는 구조체 생성
-//struct StatefulPreviewWrapper<Value: Equatable, Content: View>: View {
-//    @State private var value: Value
-//    private let content: (Binding<Value>) -> Content
-//
-//    init(_ value: Value, @ViewBuilder content: @escaping (Binding<Value>) -> Content) {
-//        self._value = State(initialValue: value)
-//        self.content = content
-//    }
-//
-//    var body: some View {
-//        content($value)
-//    }
-//}
-//
