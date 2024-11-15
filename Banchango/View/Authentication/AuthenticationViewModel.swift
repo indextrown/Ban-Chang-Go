@@ -27,11 +27,15 @@ class AuthenticationViewModel: ObservableObject {
         case updateNickname(String)
         case checkNickname(String)
         case deleteAccount
+//        case isNicknameDuplicate(String)
+        case isNicknameDuplicate(String, (Bool) -> Void)
     }
     
     @Published var authenticationState: AuthenticationState = .unauthenticated
     @Published var isLoading = false
     @Published var currentUser: User?
+    @Published var isNicknameDuplicate: Bool = false // 닉네임 중복 상태 관리
+        
     
     var userId: String?
     
@@ -50,8 +54,8 @@ class AuthenticationViewModel: ObservableObject {
             if let userId = container.services.authService.checkAuthenticationState() {
                 self.userId = userId
                 self.authenticationState = .authenticated // 사용자 ID가 있으면 인증 상태 변경
-//                print("UID: \(userId)")
-//                print("이까진성공: \(self.authenticationState)")
+                //                print("UID: \(userId)")
+                //                print("이까진성공: \(self.authenticationState)")
             }
             
         case .logout:
@@ -75,21 +79,21 @@ class AuthenticationViewModel: ObservableObject {
                             return self.container.services.userService.addUser(user)
                         }
                 }
-                // MARK: - 실패시
+            // MARK: - 실패시
                 .sink { [weak self] completion in
                     // TODO: - 실패시
                     if case .failure = completion {
                         self?.isLoading = false
                     }
-                // MARK: - 성공시
+                    // MARK: - 성공시
                 } receiveValue: { [weak self] user in
                     self?.isLoading = false
                     self?.userId = user.id // 유저정보가 오면 뷰모델에서 아이디 보유하도록
                     self?.send(action: .checkNickname(user.id))
                 }.store(in: &subscriptions) // sink를 하면 subscriptions가 리턴된다 -> 뷰모델에서 관리
-                                            //subscriptions은 뷰모델에서 관리할건데 뷰모델에서 구독이 여러개 있을 수 있어서 set으로 관리하자
+            //subscriptions은 뷰모델에서 관리할건데 뷰모델에서 구독이 여러개 있을 수 있어서 set으로 관리하자
             
-                   
+            
         case let .appleLogin(request):
             let nonce = container.services.authService.handleSignInWithAppleRequest(request as! ASAuthorizationAppleIDRequest)
             currentNonce = nonce
@@ -99,7 +103,7 @@ class AuthenticationViewModel: ObservableObject {
                 guard let nonce = currentNonce else { return }
                 
                 container.services.authService.handleSignInWithAppleCompletion(authorization, none: nonce)
-                    // TODO: - db추가
+                // TODO: - db추가
                     .flatMap { user in
                         // 사용자가 존재하는지 확인 후, 없으면 addUser 호출
                         self.container.services.userService.getUser(userId: user.id)
@@ -187,10 +191,70 @@ class AuthenticationViewModel: ObservableObject {
                     }
                 } receiveValue: { [weak self] _ in
                     // 계정과 데이터가 성공적으로 삭제된 경우
-                    self?.authenticationState = .unauthenticated
-                    self?.userId = nil
+                    DispatchQueue.main.async {
+                        self?.authenticationState = .unauthenticated
+                        self?.userId = nil
+                    }
                 }
                 .store(in: &subscriptions)
+            
+        case .isNicknameDuplicate(let nickname, let completion):
+            container.services.userService.checkNickname(nickname)
+                .sink { result in
+                    switch result {
+                    case .failure(let error):
+                        DispatchQueue.main.async {
+                            print("닉네임 중복 확인 오류: \(error.localizedDescription)")
+                            completion(false) // 오류 발생 시 false 반환
+                        }
+                    case .finished:
+                        break
+                    }
+                } receiveValue: { isDuplicate in
+                    DispatchQueue.main.async {
+                        if isDuplicate {
+                            completion(true) // 중복된 경우 클로저에 true 전달
+                        } else {
+                            completion(false) // 중복되지 않은 경우 클로저에 false 전달
+                            self.send(action: .updateNickname(nickname)) // 중복되지 않은 경우 닉네임 업데이트
+                        }
+                    }
+                }
+                .store(in: &subscriptions)
+
+
+
         }
     }
 }
+
+
+/*
+case .isNicknameDuplicate(let nickname):
+container.services.userService.checkNickname(nickname)
+    .sink { completion in
+        if case .failure(let error) = completion {
+            print("닉네임 중복 확인 중 오류 발생: \(error.localizedDescription)")
+        }
+    } receiveValue: { isDuplicate in
+        if isDuplicate {
+            print("닉네임이 중복되었습니다.")
+            self.isNicknameDuplicate = true // 닉네임 중복 상태 업데이트
+        } else {
+            guard let userId = self.userId else { return }
+            self.container.services.userService.updateUserNickname(userId: userId, nickname: nickname)
+                .sink(receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        print("닉네임이 성공적으로 업데이트되었습니다.")
+                        self.authenticationState = .authenticated
+                        self.isNicknameDuplicate = false // 중복 상태 초기화
+                    case .failure(let error):
+                        print("닉네임 업데이트 실패: \(error.localizedDescription)")
+                    }
+                }, receiveValue: { _ in })
+                .store(in: &self.subscriptions)
+        }
+    }
+    .store(in: &subscriptions)
+ */

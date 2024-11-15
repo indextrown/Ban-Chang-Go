@@ -58,8 +58,10 @@ struct ProfileView: View {
                             .sheet(isPresented: $isEditing) {
                                 NicknameEditView(isEditing: $isEditing, nickname: $nickname, profileVM: homeVM, authVM: authVM)
                                     .onDisappear {
-                                        // 키보드 닫기
-                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                        DispatchQueue.main.async {
+                                            // 키보드 닫기
+                                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                        }
                                     }
                             }
 

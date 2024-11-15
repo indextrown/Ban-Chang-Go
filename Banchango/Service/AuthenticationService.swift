@@ -157,7 +157,7 @@ extension AuthenticationService {
             let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
             
             // TODO: -
-            self?.authenticateUserWithFirebase(credential: credential, completion: completion)
+            self?.authenticateUserWithFirebase(credential: credential, platform: "Google", completion: completion)
         }
     }
     
@@ -184,7 +184,7 @@ extension AuthenticationService {
                                                       rawNonce: nonce)
                                           
         
-        authenticateUserWithFirebase(credential: credential) { result in
+        authenticateUserWithFirebase(credential: credential, platform: "Apple") { result in
             switch result {
             case var .success(user):
                 user.name = [appleIDCredential.fullName?.givenName, appleIDCredential.fullName?.familyName]
@@ -200,7 +200,10 @@ extension AuthenticationService {
     
     
     // MARK: - 파이어베이스 인증 진행 함수
-    private func authenticateUserWithFirebase(credential: AuthCredential, completion: @escaping (Result<User, Error>) -> Void ) {
+    private func authenticateUserWithFirebase(
+        credential: AuthCredential,
+        platform: String? = nil,
+        completion: @escaping (Result<User, Error>) -> Void ) {
         Auth.auth().signIn(with: credential) { result, error in
             if let error {
                 completion(.failure(error))
@@ -212,16 +215,23 @@ extension AuthenticationService {
                 return
             }
             
+            // 현재 시간을 문자열로 변환
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss" // 원하는 형식
+            let currentDate = formatter.string(from: Date())
+    
+            
             let firebaseUser = result.user
             let user: User = .init(id: firebaseUser.uid,
                                    name: firebaseUser.displayName ?? "",
                                    phoneNumber: firebaseUser.phoneNumber,
-                                   profileURL: firebaseUser.photoURL?.absoluteString)
+                                   profileURL: firebaseUser.photoURL?.absoluteString,
+                                   signupDate: currentDate,
+                                   platform: platform
+                                )
             completion(.success(user))
-            
         }
     }
-    
 }
 
 class StubAuthenticationService: AuthenticationServiceType {

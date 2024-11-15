@@ -15,17 +15,8 @@ struct BanchangoApp: App {
     var body: some Scene {
         WindowGroup {         
             let container = DIContainer(services: Services())
-//            AuthenticationView(
-//                authVM: .init(container: container)
-//            )
-//            .environmentObject(container)
-            
-            
             if isFirstLaunching {
                 OnboardingContentView(onboardingViewModel: .init())
-//                    .onDisappear {
-//                        isFirstLaunching = false // 온보딩이 사라질 때 첫 실행 여부를 false로 설정
-//                    }
             } else {
                 AuthenticationView(
                     authVM: .init(container: container)

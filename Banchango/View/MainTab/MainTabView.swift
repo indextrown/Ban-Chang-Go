@@ -41,15 +41,12 @@ struct MainTabView: View {
                 case .home:
                     HomeView()
                         .environmentObject(homeVM)
-                        .ignoresSafeArea(edges: .top) // 최상단 여백 없이 채움
                 case .map:
                     MapView()
-                        .ignoresSafeArea(edges: .top)
                 case .profile:
                     ProfileView()
                         .environmentObject(authVM)
                         .environmentObject(homeVM)
-                        .ignoresSafeArea(edges: .top)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -84,7 +81,6 @@ struct MainTabView: View {
             .frame(height: 90) // 고정 높이
             .background(Color.white) // 탭바 배경
             .clipShape(Rectangle()) // 탭바의 모서리 부분이 깨지지 않도록 설정
-            //.shadow(radius: 5) // 약간의 그림자 추가로 구분 명확하게
         }
         .edgesIgnoringSafeArea(.bottom) // 하단 여백 제거
         .background(Color.white.ignoresSafeArea()) // 전체 화면 배경 설정

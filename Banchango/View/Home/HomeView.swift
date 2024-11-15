@@ -158,7 +158,7 @@ struct LoadedView: View {
                                                     .font(.system(size: 30))
                                                     .frame(width: 50, height: 50)
                                                     .foregroundColor(.bkText)
-                                                //.background(Color.gray.opacity(0.2))
+                                          
                                                     .cornerRadius(10)
                                             }
                                             

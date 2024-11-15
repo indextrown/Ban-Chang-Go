@@ -341,10 +341,7 @@ extension CLLocationCoordinate2D {
                         district = String(components[1]) // "남구"
                     }
                 }
-
-                // 결과 출력
-                //print("Parsed City: \(city), Parsed District: \(district)")
-
+                
                 // 결과 반환
                 if !city.isEmpty && !district.isEmpty {
                     completion([city, district])
@@ -414,13 +411,12 @@ struct MapView: View {
                     }
                 }
             }
-            .ignoresSafeArea()
+            //.ignoresSafeArea()
             .onMapCameraChange { context in
                 // 카메라 중심 좌표 변경 시 호출
                 let centerCoordinate = context.camera.centerCoordinate
                 viewModel.debouncefetchNearbyPharmacies(for: centerCoordinate)
             }
-            //.ignoresSafeArea()
 
             .sheet(item: $selectedPlace) { place in
                 PharmacyDetailView(pharmacy: place, detent: $detent)
@@ -430,7 +426,7 @@ struct MapView: View {
             
             VStack {
                 Spacer()
-                    .frame(height: 100)
+                    .frame(height: 60)
                 
                 HStack {
                     TextField("약국 이름을 검색하세요", text: $searchText)
@@ -527,10 +523,6 @@ struct MapView: View {
         }
     }
 }
-
-//#Preview {
-//    MapView()
-//}
 
 struct PharmacyDetailView: View {
     var pharmacy: Pharmacy
@@ -660,62 +652,3 @@ struct PharmacyDetailView: View {
     }
 }
 
-
-
-struct PharmacyDetailView_Previews: PreviewProvider {
-    static var previews: some View {
-        // 샘플 약국 데이터를 생성합니다.
-        /*
-        let samplePharmacy = Pharmacy(
-            name: "샘플 약국",
-            latitude: 37.5665,
-            longitude: 126.9780,
-            address: "서울특별시 강남구 테헤란로 123",
-            city: ["서울특별시", "강남구"],
-            roadAddress: "서울특별시 강남구 테헤란로 123",
-            phone: "02-123-4567",
-            operatingHours: [
-                "월요일": "09:00 - 18:00",
-                "화요일": "09:00 - 18:00",
-                "수요일": "09:00 - 18:00",
-                "목요일": "09:00 - 18:00",
-                "금요일": "09:00 - 18:00",
-                "토요일": "10:00 - 14:00",
-                "일요일": "휴무"
-            ]
-        )
-        */
-        // State를 사용하여 detent 값을 관리하고 이를 Binding으로 전달합니다.
-        StateWrapper()
-            .previewLayout(.sizeThatFits)
-    }
-
-    // State를 관리하기 위한 래퍼 뷰
-    struct StateWrapper: View {
-        @State private var detent: PresentationDetent = .fraction(0.18)
-
-        var body: some View {
-            PharmacyDetailView(
-                pharmacy: Pharmacy(
-                    name: "샘플 약국",
-                    latitude: 37.5665,
-                    longitude: 126.9780,
-                    address: "서울특별시 강남구 테헤란로 123",
-                    city: ["서울특별시", "강남구"],
-                    roadAddress: "서울특별시 강남구 테헤란로 123",
-                    phone: "02-123-4567",
-                    operatingHours: [
-                        "월요일": "09:00 - 18:00",
-                        "화요일": "09:00 - 18:00",
-                        "수요일": "09:00 - 18:00",
-                        "목요일": "09:00 - 18:00",
-                        "금요일": "09:00 - 18:00",
-                        "토요일": "10:00 - 14:00",
-                        "일요일": "휴무"
-                    ]
-                ),
-                detent: $detent
-            )
-        }
-    }
-}

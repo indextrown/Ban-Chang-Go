@@ -37,7 +37,6 @@ struct AuthenticationView: View {
             
             // 인증된 상태로 변경될 때 닉네임 체크
             if newState == .authenticated, let userId = authVM.userId {
-                //print("인증상태 + userId존재: \(userId)")
                 authVM.send(action: .checkNickname(userId)) // 닉네임 체크
             }
         }
@@ -54,7 +53,7 @@ struct AuthenticationView: View {
 
 
 
-//#Preview {
-//    AuthenticationView(authVM: .init(container: .init(services: Services())))
-//}
-//authVM.authTest(action: .unauthenticated)
+#Preview {
+    AuthenticationView(authVM: .init(container: .init(services: Services())))
+}
+

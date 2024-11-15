@@ -58,7 +58,6 @@ struct OnboardingContentView: View {
             
             StartBtnView()
         }
-//       .edgesIgnoringSafeArea(.top)
     }
 }
 
@@ -152,51 +151,6 @@ private struct StartBtnView: View {
         .padding(.bottom, 20)
     }
 }
-
-
-
-/*
-struct OnboardingView2: View {
-    @Binding var isFirstLaunching: Bool
-    @State private var currentTab = 0
-
-        var body: some View {
-            TabView(selection: $currentTab) {
-                Image("onboarding11")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                    .tag(0)
-                
-                Image("onboarding12")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                    .tag(1)
-            }
-            .tabViewStyle(PageTabViewStyle())
-            .overlay(
-                VStack {
-                    Spacer()
-                    
-                    if currentTab == 1 {
-                        Button(action: {
-                            isFirstLaunching = false // 첫 실행 후 온보딩 종료
-                        }) {
-                            Text("시작하기")
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.blue)
-                                .cornerRadius(10)
-                        }
-                        .padding(.bottom, 50)
-                    }
-                }
-            )
-            .ignoresSafeArea()
-        }
-}
- */
 
 #Preview {
     OnboardingContentView(onboardingViewModel: .init())

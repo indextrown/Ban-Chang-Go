@@ -15,6 +15,7 @@ protocol UserServiceType {
     func loadUsers(id: String) -> AnyPublisher<[User], ServiceError>
     func updateUserNickname(userId: String, nickname: String) -> AnyPublisher<Void, ServiceError> // 추가
     func deleteUser(userId: String) -> AnyPublisher<Void, ServiceError>
+    func checkNickname(_ nickname: String) -> AnyPublisher<Bool, ServiceError>
 }
 
 class UserService: UserServiceType {
@@ -79,6 +80,16 @@ class UserService: UserServiceType {
         }
         .eraseToAnyPublisher()
     }
+    
+    func checkNickname(_ nickname: String) -> AnyPublisher<Bool, ServiceError> {
+        dbRepository.loadUsers()
+            .map { users in
+                users.contains { $0.nickname == nickname }
+            }
+            .mapError { .error($0) }
+            .eraseToAnyPublisher()
+    }
+    
 }
 
 class StubUserService: UserServiceType {
@@ -98,6 +109,10 @@ class StubUserService: UserServiceType {
         Just([.stub1, .stub2]).setFailureType(to: ServiceError.self).eraseToAnyPublisher()
     }
     func deleteUser(userId: String) -> AnyPublisher<Void, ServiceError> {
+        Empty().eraseToAnyPublisher()
+    }
+    
+    func checkNickname(_ nickname: String) -> AnyPublisher<Bool, ServiceError> {
         Empty().eraseToAnyPublisher()
     }
 }

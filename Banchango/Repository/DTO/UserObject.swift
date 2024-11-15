@@ -14,6 +14,8 @@ struct UserObject: Codable {
     var profileURL: String?
     var description: String?
     var nickname: String?
+    var signupDate: String?
+    var platform: String?
 }
 
 
@@ -24,7 +26,9 @@ extension UserObject {
               phoneNumber: phoneNumber,
               profileURL: profileURL,
               description: description,
-              nickname: nickname
+              nickname: nickname,
+              signupDate: signupDate,
+              platform: platform
         )
     }
 }
