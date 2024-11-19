@@ -387,8 +387,7 @@ struct MapView: View {
                             .shadow(radius: 3)
                     }
                 }
-                
-                
+            
                 ForEach(viewModel.pharmacies, id: \.name) { pharmacy in
                     Annotation("", coordinate: CLLocationCoordinate2D(latitude: pharmacy.latitude, longitude: pharmacy.longitude)) {
                         Button {
@@ -551,7 +550,6 @@ struct PharmacyDetailView: View {
                             .padding(.leading, 5)
                             .foregroundColor(.gray)
                             .font(.title)
-                            
                     }
                     
                     Spacer()

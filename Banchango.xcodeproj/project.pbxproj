@@ -640,7 +640,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Banchango/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "반창고";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "이 앱은 현재 위치를 기반으로 근처 약국을 추천하고, 운영 시간 및 길찾기 기능을 제공합니다.  ";
+				INFOPLIST_KEY_NSMotionUsageDescription = "이 앱은 걸음 수를 측정하여 일일 칼로리 소비량을 계산하기 위해 모션 데이터를 사용합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -679,7 +682,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Banchango/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "반창고";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "이 앱은 현재 위치를 기반으로 근처 약국을 추천하고, 운영 시간 및 길찾기 기능을 제공합니다.  ";
+				INFOPLIST_KEY_NSMotionUsageDescription = "이 앱은 걸음 수를 측정하여 일일 칼로리 소비량을 계산하기 위해 모션 데이터를 사용합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
