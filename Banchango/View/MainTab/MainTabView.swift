@@ -8,11 +8,12 @@
 import SwiftUI
 
 enum MainTabType: CaseIterable {
-    case home, map, profile
+    case home, posture, map, profile
     
     var title: String {
         switch self {
         case .home: return "홈"
+        case .posture: return "자세 교정"
         case .map: return "지도"
         case .profile: return "프로필"
         }
@@ -21,11 +22,13 @@ enum MainTabType: CaseIterable {
     func imageName(isSelected: Bool) -> String {
         switch self {
         case .home: return isSelected ? "house.fill" : "house"
+        case .posture: return "earbuds"
         case .map: return isSelected ? "map.fill" : "map"
         case .profile: return isSelected ? "person.fill" : "person"
         }
     }
 }
+
 
 struct MainTabView: View {
     @EnvironmentObject var authVM: AuthenticationViewModel
@@ -41,6 +44,8 @@ struct MainTabView: View {
                 case .home:
                     HomeView()
                         .environmentObject(homeVM)
+                case .posture:
+                    PostureView()
                 case .map:
                     MapView()
                 case .profile:
@@ -84,5 +89,18 @@ struct MainTabView: View {
         }
         .edgesIgnoringSafeArea(.bottom) // 하단 여백 제거
         .background(Color.white.ignoresSafeArea()) // 전체 화면 배경 설정
+    }
+}
+
+
+struct MainTabView_Previews: PreviewProvider {
+    static var previews: some View {
+        let container = DIContainer(services: Services())
+        let homeVM = HomeViewModel(container: container, userId: "preview_user")
+        let authVM = AuthenticationViewModel(container: container)
+        
+        return MainTabView(homeVM: homeVM)
+            .environmentObject(authVM)
+            .environmentObject(container)
     }
 }

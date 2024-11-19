@@ -16,6 +16,8 @@ struct User {
     var nickname: String?
     var signupDate: String?
     var platform: String?
+    var birthdate: String?
+    var gender: String?
 }
 extension User {
     // 유저의 타입을 object화
@@ -27,7 +29,9 @@ extension User {
               description: description,
               nickname: nickname,
               signupDate: signupDate,
-              platform: platform
+              platform: platform,
+              birthdate: birthdate,
+              gender: gender
         )
     }
 }

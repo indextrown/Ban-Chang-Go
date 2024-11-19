@@ -105,8 +105,6 @@ struct LoginView: View {
             )
         }
     }
-    
-    
 }
 
 #Preview {

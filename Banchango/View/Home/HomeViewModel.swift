@@ -43,10 +43,19 @@ class HomeViewModel: ObservableObject {
                     self.container.services.userService.loadUsers(id: user.id)
                 }
                 .sink { [weak self] completion in
-                    // TODO:
-                    if case .failure = completion {
+                    switch completion {
+                    case .failure(let error):
+                        print("실패: \(error.localizedDescription)") // 에러 메시지 출력
                         self?.phase = .fail
+                    case .finished:
+                        break
                     }
+//                .sink { [weak self] completion in
+//                    // TODO:
+//                    if case .failure = completion {
+//                        print("실패")
+//                        self?.phase = .fail
+//                    }
                 } receiveValue: { [weak self] users in
                     self?.phase = .success
                 }.store(in: &subscriptions)

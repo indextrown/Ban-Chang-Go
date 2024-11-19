@@ -33,7 +33,6 @@ struct HomeView: View {
             LoadedView()
                 .environmentObject(homeVM)
                 
-               
         case .fail:
             ErrorView()
         }

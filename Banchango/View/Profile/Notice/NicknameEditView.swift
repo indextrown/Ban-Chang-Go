@@ -75,6 +75,7 @@ struct NicknameEditView: View {
                                 nicknameMessage = "닉네임이 중복되었습니다."
                             } else {
                                 nicknameMessage = nil
+                                authVM.send(action: .updateNickname(nickname))
                                 profileVM.myUser?.nickname = nickname
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                     isEditing = false // 닉네임 업데이트 성공 시 시트 닫기

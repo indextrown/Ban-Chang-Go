@@ -14,6 +14,7 @@ protocol UserServiceType {
     func getUser(userId: String) -> AnyPublisher<User, ServiceError>
     func loadUsers(id: String) -> AnyPublisher<[User], ServiceError>
     func updateUserNickname(userId: String, nickname: String) -> AnyPublisher<Void, ServiceError> // 추가
+    func updateUser(userId: String, nickname: String, birthdate: String, gender: String) -> AnyPublisher<Void, ServiceError>
     func deleteUser(userId: String) -> AnyPublisher<Void, ServiceError>
     func checkNickname(_ nickname: String) -> AnyPublisher<Bool, ServiceError>
 }
@@ -37,6 +38,11 @@ class UserService: UserServiceType {
     func getUser(userId: String) -> AnyPublisher<User, ServiceError> {
         dbRepository.getUser(userId: userId)
             .map { $0.toModel() }
+            /*
+            .map { userObject in    // 에러디버깅
+                return userObject.toModel()
+            }
+            */
             .mapError { dbError in
                 if case .emptyValue = dbError {
                     return .userNotFound
@@ -64,6 +70,14 @@ class UserService: UserServiceType {
                 .mapError { .error($0) }
                 .eraseToAnyPublisher()
         }
+    
+    func updateUser(userId: String, nickname: String, birthdate: String, gender: String) -> AnyPublisher<Void, ServiceError> {
+        let updatedUserObject = UserObject(id: userId, name: "", nickname: nickname, birthdate: birthdate, gender: gender) // 필요한 다른 속성도 추가
+            return dbRepository.updateUser(updatedUserObject)
+                .mapError { .error($0) }
+                .eraseToAnyPublisher()
+        }
+    
     
     func deleteUser(userId: String) -> AnyPublisher<Void, ServiceError> {
         Future { promise in
@@ -93,9 +107,7 @@ class UserService: UserServiceType {
 }
 
 class StubUserService: UserServiceType {
-    func updateUserNickname(userId: String, nickname: String) -> AnyPublisher<Void, ServiceError> {
-        Empty().eraseToAnyPublisher()
-    }
+    
     
     func addUser(_ user: User) -> AnyPublisher<User, ServiceError> {
         Empty().eraseToAnyPublisher()
@@ -113,6 +125,14 @@ class StubUserService: UserServiceType {
     }
     
     func checkNickname(_ nickname: String) -> AnyPublisher<Bool, ServiceError> {
+        Empty().eraseToAnyPublisher()
+    }
+    
+    func updateUserNickname(userId: String, nickname: String) -> AnyPublisher<Void, ServiceError> {
+        Empty().eraseToAnyPublisher()
+    }
+    
+    func updateUser(userId: String, nickname: String, birthdate: String, gender: String) -> AnyPublisher<Void, ServiceError> {
         Empty().eraseToAnyPublisher()
     }
 }

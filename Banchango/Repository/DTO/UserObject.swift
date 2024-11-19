@@ -16,6 +16,8 @@ struct UserObject: Codable {
     var nickname: String?
     var signupDate: String?
     var platform: String?
+    var birthdate: String?
+    var gender: String?
 }
 
 
@@ -28,7 +30,9 @@ extension UserObject {
               description: description,
               nickname: nickname,
               signupDate: signupDate,
-              platform: platform
+              platform: platform,
+              birthdate: birthdate,
+              gender: gender
         )
     }
 }

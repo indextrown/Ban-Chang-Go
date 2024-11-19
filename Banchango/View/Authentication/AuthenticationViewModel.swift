@@ -25,9 +25,9 @@ class AuthenticationViewModel: ObservableObject {
         case checkAuthenticationState
         case logout
         case updateNickname(String)
+        case updateUser(String, String, String)
         case checkNickname(String)
         case deleteAccount
-//        case isNicknameDuplicate(String)
         case isNicknameDuplicate(String, (Bool) -> Void)
     }
     
@@ -35,7 +35,7 @@ class AuthenticationViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var currentUser: User?
     @Published var isNicknameDuplicate: Bool = false // 닉네임 중복 상태 관리
-        
+    
     
     var userId: String?
     
@@ -54,8 +54,8 @@ class AuthenticationViewModel: ObservableObject {
             if let userId = container.services.authService.checkAuthenticationState() {
                 self.userId = userId
                 self.authenticationState = .authenticated // 사용자 ID가 있으면 인증 상태 변경
-                //                print("UID: \(userId)")
-                //                print("이까진성공: \(self.authenticationState)")
+                // print("UID: \(userId)")
+                // print("이까진성공: \(self.authenticationState)")
             }
             
         case .logout:
@@ -142,13 +142,29 @@ class AuthenticationViewModel: ObservableObject {
                 }, receiveValue: { _ in })
                 .store(in: &subscriptions)
             
+        case .updateUser(let nickname, let birthdate, let gender):
+            guard let userId = userId else { return } // 사용자 ID가 없으면 리턴
+            
+            // container.services.userService를 통해 닉네임 업데이트 호출
+            container.services.userService.updateUser(userId: userId, nickname: nickname, birthdate: birthdate, gender: gender)
+                .sink(receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        self.authenticationState = .authenticated // 닉네임 설정 후 인증 상태 변경
+                    case .failure(let error):
+                        print("닉네임 업데이트 실패: \(error)") // 오류 처리
+                    }
+                }, receiveValue: { _ in })
+                .store(in: &subscriptions)
+            
+            
         case .checkNickname(let userId):
             //print("사용자 ID에 대한 닉네임 확인 중: \(userId)") // 한글 로그 추가
             container.services.userService.getUser(userId: userId)
                 .sink { completion in
                     if case .failure = completion {
                         //print("사용자 정보를 가져오는 데 실패했습니다: \(completion)") // 한글 로그 추가
-                        self.authenticationState = .nicknameRequired
+                        self.authenticationState = .unauthenticated
                     }
                 } receiveValue: { existingUser in
                     //print("받은 사용자 정보: \(existingUser)") // 한글 로그 추가
@@ -216,45 +232,10 @@ class AuthenticationViewModel: ObservableObject {
                             completion(true) // 중복된 경우 클로저에 true 전달
                         } else {
                             completion(false) // 중복되지 않은 경우 클로저에 false 전달
-                            self.send(action: .updateNickname(nickname)) // 중복되지 않은 경우 닉네임 업데이트
                         }
                     }
                 }
                 .store(in: &subscriptions)
-
-
-
         }
     }
 }
-
-
-/*
-case .isNicknameDuplicate(let nickname):
-container.services.userService.checkNickname(nickname)
-    .sink { completion in
-        if case .failure(let error) = completion {
-            print("닉네임 중복 확인 중 오류 발생: \(error.localizedDescription)")
-        }
-    } receiveValue: { isDuplicate in
-        if isDuplicate {
-            print("닉네임이 중복되었습니다.")
-            self.isNicknameDuplicate = true // 닉네임 중복 상태 업데이트
-        } else {
-            guard let userId = self.userId else { return }
-            self.container.services.userService.updateUserNickname(userId: userId, nickname: nickname)
-                .sink(receiveCompletion: { completion in
-                    switch completion {
-                    case .finished:
-                        print("닉네임이 성공적으로 업데이트되었습니다.")
-                        self.authenticationState = .authenticated
-                        self.isNicknameDuplicate = false // 중복 상태 초기화
-                    case .failure(let error):
-                        print("닉네임 업데이트 실패: \(error.localizedDescription)")
-                    }
-                }, receiveValue: { _ in })
-                .store(in: &self.subscriptions)
-        }
-    }
-    .store(in: &subscriptions)
- */

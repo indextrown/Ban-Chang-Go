@@ -203,6 +203,8 @@ extension AuthenticationService {
     private func authenticateUserWithFirebase(
         credential: AuthCredential,
         platform: String? = nil,
+        birthdate: String? = nil, // 생일 매개변수 추가
+        gender: String? = nil, // 성별 매개변수 추가
         completion: @escaping (Result<User, Error>) -> Void ) {
         Auth.auth().signIn(with: credential) { result, error in
             if let error {
@@ -227,8 +229,10 @@ extension AuthenticationService {
                                    phoneNumber: firebaseUser.phoneNumber,
                                    profileURL: firebaseUser.photoURL?.absoluteString,
                                    signupDate: currentDate,
-                                   platform: platform
-                                )
+                                   platform: platform,
+                                   birthdate: birthdate, // 생일 포함
+                                   gender: gender) // 성별 포함
+                                
             completion(.success(user))
         }
     }
