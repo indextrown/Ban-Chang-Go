@@ -26,8 +26,10 @@ struct NoticeDetailView: View {
                 Spacer()
                     .frame(height: 10)
                 
-                Text(notice.content)
+                Text(notice.content.replacingOccurrences(of: "\\n", with: "\n"))
                     .font(.body)
+                    .multilineTextAlignment(.leading)
+
                 
                 Spacer()
             }

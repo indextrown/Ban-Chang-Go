@@ -9,7 +9,10 @@ import SwiftUI
 
 struct PostureView: View {
     var body: some View {
-        Text("PostureView")
+        VStack {
+            RectView(height: 50, color: .gray2)
+        }
+        .padding()
     }
 }
 
