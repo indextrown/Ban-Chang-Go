@@ -65,7 +65,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate {
 }
 
 // HeadphoneMotionManager 클래스
-class HeadphoneMotionManager: ObservableObject {
+class HeadphoneMotionManageryes: ObservableObject {
     private var headphoneManager = CMHeadphoneMotionManager()
     
     @Published var isAuthorized = false
@@ -168,6 +168,138 @@ class HeadphoneMotionManager: ObservableObject {
     }
 }
 
+class HeadphoneMotionManager: ObservableObject {
+    private var headphoneManager = CMHeadphoneMotionManager()
+    
+    @Published var isAuthorized = false
+    @Published var isTracking = false
+    @Published var pitch: Double = 0.0
+    @Published var roll: Double = 0.0
+    @Published var yaw: Double = 0.0
+    
+    @Published var remainTime: Int = 5
+    @Published var isMonitoring = false
+    @Published var isCalibrating = false
+    @Published var calibrationTimer: Int = 5
+    @Published var monitoringTimer: Int = 0
+    @Published var isAlerting = false
+    @Published var calibrationPitch: Double = 0.0
+    @Published var calibrationRoll: Double = 0.0
+    @Published var calibrationYaw: Double = 0.0
+    
+    private var timer: Timer?
+    
+    init() {
+        print("HeadphoneMotionManager 초기화됨")
+        updateAuthorization()
+        startTracking()
+    }
+    
+    func updateAuthorization() {
+        isAuthorized = CMHeadphoneMotionManager.authorizationStatus() == .authorized
+        print("권한 상태: \(isAuthorized ? "허가됨" : "허가되지 않음")")
+    }
+    
+    func startTracking() {
+        guard headphoneManager.isDeviceMotionAvailable else {
+            print("디바이스 모션 데이터가 지원되지 않음")
+            return
+        }
+        if isTracking {
+            print("이미 모션 데이터를 추적 중입니다.")
+            return
+        }
+        
+        print("모션 데이터 업데이트 시작")
+        headphoneManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, error in
+            if let error = error {
+                print("모션 데이터 업데이트 에러: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let self = self, let motion = motion else {
+                print("모션 데이터를 받지 못했습니다.")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.pitch = motion.attitude.pitch
+                self.roll = motion.attitude.roll
+                self.yaw = motion.attitude.yaw
+                
+                // print("Pitch: \(self.pitch), Roll: \(self.roll), Yaw: \(self.yaw)")
+            }
+        }
+        isTracking = true
+    }
+    
+    func stopTracking() {
+        print("모션 데이터 업데이트 중지")
+        headphoneManager.stopDeviceMotionUpdates()
+        isTracking = false
+    }
+    
+    func calibrate() {
+        print("캘리브레이션 시작")
+        if let motion = headphoneManager.deviceMotion {
+            calibrationPitch = motion.attitude.pitch
+            calibrationRoll = motion.attitude.roll
+            calibrationYaw = motion.attitude.yaw
+            print("캘리브레이션 완료: Pitch: \(calibrationPitch), Roll: \(calibrationRoll), Yaw: \(calibrationYaw)")
+        } else {
+            print("캘리브레이션 중 모션 데이터를 사용할 수 없음")
+        }
+    }
+    
+    func startMonitoring() {
+        monitoringTimer = remainTime * 60
+        isMonitoring = true
+        // print("모니터링 시작: \(remainTime)분")
+        
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            if self.monitoringTimer > 0 {
+                self.monitoringTimer -= 1
+                let forwardHeadThreshold: Double = -0.4
+                self.isAlerting = self.pitch < forwardHeadThreshold
+                if self.isAlerting {
+                    print("경고: 바른 자세를 유지해주세요.")
+                }
+            } else {
+                self.stopMonitoring()
+            }
+        }
+    }
+    
+    func stopMonitoring() {
+        print("모니터링 중지")
+        timer?.invalidate()
+        isMonitoring = false
+    }
+    
+    func startCalibration() {
+        isCalibrating = true
+        calibrationTimer = 5
+        print("캘리브레이션 타이머 시작")
+        
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            if self.calibrationTimer > 1 {
+                self.calibrationTimer -= 1
+                // print("캘리브레이션 남은 시간: \(self.calibrationTimer)")
+            } else {
+                self.timer?.invalidate()
+                self.isCalibrating = false
+                self.calibrate()
+                self.startMonitoring()
+            }
+        }
+    }
+}
+
+
 struct PostureView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var motionManager: HeadphoneMotionManager
@@ -243,7 +375,7 @@ struct PostureView: View {
                     }
                     .padding(.horizontal)
                     
-          
+                    
                     // 자세 교정 뷰
                     PostureSetupView()
                 }
@@ -273,10 +405,21 @@ struct PostureSetupView: View {
                     )
                 )
                 .frame(width: 150, height: 200)
-                .rotation3DEffect(.radians(motionManager.pitch), axis: (x: 1, y: 0, z: 0))
-                .rotation3DEffect(.radians(motionManager.yaw), axis: (x: 0, y: 1, z: 0))
-                .rotation3DEffect(.radians(motionManager.roll), axis: (x: 0, y: 0, z: 1))
+                .rotation3DEffect(
+                    .radians(motionManager.pitch),
+                    axis: (x: 1, y: 0, z: 0)
+                )
+//                .rotation3DEffect(
+//                    .radians(motionManager.yaw),
+//                    axis: (x: 0, y: 1, z: 0)
+//                )
+                .rotation3DEffect(
+                    .radians(motionManager.roll),
+                    axis: (x: 0, y: 0, z: 1)
+                )
+                .animation(.easeOut(duration: 0.1), value: motionManager.pitch) // 업데이트 주기 제한
                 .padding()
+
 
             // 현재 Pitch, Roll, Yaw 표시
             VStack(spacing: 10) {
@@ -296,6 +439,16 @@ struct PostureSetupView: View {
                 .frame(width: 100)
                 .clipped()
             }
+            
+            // 자세 상태 메시지
+            if motionManager.isMonitoring {
+                Text(motionManager.isAlerting ? "자세가 틀어졌습니다!" : "바른 자세 유지 중입니다.")
+                    .foregroundColor(motionManager.isAlerting ? .red : .green)
+                    .font(.headline)
+            }
+            
+            
+        
 
             // 기준 자세 설정 및 모니터링 버튼
             Button(action: {
@@ -313,18 +466,17 @@ struct PostureSetupView: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(motionManager.isMonitoring ? Color.red :
-                                motionManager.isCalibrating || !bluetoothManager.isAirPodsConnected ? Color.gray : Color.blue)
+                                motionManager.isCalibrating || !bluetoothManager.isAirPodsConnected ? Color.gray : Color.maincolor)
                     .foregroundColor(.white)
                     .cornerRadius(10)
             }
-            .disabled(motionManager.isCalibrating && !motionManager.isMonitoring)
+            .disabled(
+                motionManager.isCalibrating
+                || !bluetoothManager.isAirPodsConnected
+            ) // 모니터링 중일 때는 버튼 활성화
+            // .disabled(motionManager.isCalibrating && !motionManager.isMonitoring)
 
-            // 자세 상태 메시지
-            if motionManager.isMonitoring {
-                Text(motionManager.isAlerting ? "자세가 틀어졌습니다!" : "바른 자세 유지 중입니다.")
-                    .foregroundColor(motionManager.isAlerting ? .red : .green)
-                    .font(.headline)
-            }
+            
         }
 //        .onAppear {
 //            motionManager.updateAuthorization()
@@ -335,15 +487,6 @@ struct PostureSetupView: View {
 //        }
     }
 }
-
-
-
-
-
-
-
-
-
 
 
 
