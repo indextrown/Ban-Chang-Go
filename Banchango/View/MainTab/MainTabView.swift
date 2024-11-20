@@ -34,7 +34,8 @@ struct MainTabView: View {
     @EnvironmentObject var authVM: AuthenticationViewModel
     @EnvironmentObject var container: DIContainer
     @StateObject var homeVM: HomeViewModel
-    @StateObject private var bluetoothManager = BluetoothManager() // BluetoothManager 초기화
+    @StateObject var bluetoothManager = BluetoothManager() // BluetoothManager 초기화
+    @StateObject var motionManager = HeadphoneMotionManager()
     @State private var selectedTab: MainTabType = .home
 
     var body: some View {
@@ -48,6 +49,7 @@ struct MainTabView: View {
                 case .posture:
                     PostureView()
                         .environmentObject(bluetoothManager)
+                        .environmentObject(motionManager)
                 case .map:
                     MapView()
                 case .profile:
