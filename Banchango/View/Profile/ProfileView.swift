@@ -11,6 +11,7 @@ import Combine
 struct ProfileView: View {
     @EnvironmentObject var authVM: AuthenticationViewModel
     @EnvironmentObject var homeVM: HomeViewModel
+    @EnvironmentObject var motionManager: HeadphoneMotionManager
     @StateObject private var noticeVM = NoticeViewModel()
 
     @State private var nickname: String = ""
@@ -145,9 +146,13 @@ struct ProfileView: View {
                         RectViewHC(height: 50, color: .white, radius: 15)
                             .overlay {
                                 Button {
+                                    if motionManager.isMonitoring {
+                                        motionManager.stopMonitoring()
+                                    }
                                     showDeleteConfiguration = true
+                                    
                                     // 계정 탈퇴 동작
-                                    //authVM.send(action: .deleteAccount)
+                                    // authVM.send(action: .deleteAccount)
                                 } label: {
                                     HStack {
                                         Text("계정탈퇴")
@@ -160,6 +165,9 @@ struct ProfileView: View {
                         
                         // 로그아웃 버튼
                         Button {
+                            if motionManager.isMonitoring {
+                                motionManager.stopMonitoring()
+                            }
                             authVM.send(action: .logout)
                         } label: {
                             Text("로그아웃")

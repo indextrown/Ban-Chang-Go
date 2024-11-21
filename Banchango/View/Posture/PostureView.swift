@@ -8,8 +8,9 @@
 import SwiftUI
 import CoreBluetooth
 import CoreMotion
+import Combine
 
-class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate {
+final class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     private var centralManager: CBCentralManager?
     private var peripheral: CBPeripheral?
     
@@ -65,7 +66,7 @@ class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate {
 }
 
 // HeadphoneMotionManager 클래스
-class HeadphoneMotionManageryes: ObservableObject {
+final class HeadphoneMotionManageryes: ObservableObject {
     private var headphoneManager = CMHeadphoneMotionManager()
     
     @Published var isAuthorized = false
@@ -168,8 +169,9 @@ class HeadphoneMotionManageryes: ObservableObject {
     }
 }
 
-class HeadphoneMotionManager: ObservableObject {
+final class HeadphoneMotionManager: ObservableObject {
     private var headphoneManager = CMHeadphoneMotionManager()
+    private var cancellables = Set<AnyCancellable>()
     
     @Published var isAuthorized = false
     @Published var isTracking = false
@@ -200,6 +202,7 @@ class HeadphoneMotionManager: ObservableObject {
         print("권한 상태: \(isAuthorized ? "허가됨" : "허가되지 않음")")
     }
     
+    /*
     func startTracking() {
         guard headphoneManager.isDeviceMotionAvailable else {
             print("디바이스 모션 데이터가 지원되지 않음")
@@ -232,7 +235,33 @@ class HeadphoneMotionManager: ObservableObject {
         }
         isTracking = true
     }
+    */
     
+    func startTracking() {
+        guard headphoneManager.isDeviceMotionAvailable else { return }
+        if isTracking { return }
+        
+        headphoneManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
+            guard let self = self, let motion = motion else { return }
+            
+            let newPitch = motion.attitude.pitch
+            let newRoll = motion.attitude.roll
+            let newYaw = motion.attitude.yaw
+            
+            DispatchQueue.main.async {
+                Just((newPitch, newRoll, newYaw))
+                    .throttle(for: .milliseconds(100), scheduler: RunLoop.main, latest: true)
+                    .sink { [weak self] pitch, roll, yaw in
+                        self?.pitch = pitch
+                        self?.roll = roll
+                        self?.yaw = yaw
+                    }
+                    .store(in: &self.cancellables)
+            }
+        }
+        isTracking = true
+    }
+
     func stopTracking() {
         print("모션 데이터 업데이트 중지")
         headphoneManager.stopDeviceMotionUpdates()
@@ -299,7 +328,6 @@ class HeadphoneMotionManager: ObservableObject {
     }
 }
 
-
 struct PostureView: View {
     @EnvironmentObject var bluetoothManager: BluetoothManager
     @EnvironmentObject var motionManager: HeadphoneMotionManager
@@ -311,7 +339,7 @@ struct PostureView: View {
             // 배경색
             Color.gray1
                 .edgesIgnoringSafeArea(.all)
-            ScrollView {
+
                 VStack(spacing: 30) {
                     // 상단 HStack
                     HStack(spacing: 20) {
@@ -325,7 +353,12 @@ struct PostureView: View {
                                     ),
                                     lineWidth: 3
                                 )
-                                .frame(width: 120, height: 152)
+                                .background(
+                                    Circle()
+                                        .fill(Color.white) // 흰색 배경 원
+                                        .frame(width: 117, height: 117) // 흰색 배경 크기를 줄이기 위해 원 크기 조정
+                                )
+                                .frame(width: 120, height: 120)
                                 .rotationEffect(Angle(degrees: isAnimating && !bluetoothManager.isAirPodsConnected ? 360 : 0))
                                 .animation(
                                     isAnimating && !bluetoothManager.isAirPodsConnected
@@ -373,7 +406,7 @@ struct PostureView: View {
                             .disabled(bluetoothManager.isAirPodsConnected)
                         }
                     }
-                    .padding(.horizontal)
+                        .padding(.horizontal)
                     
                     
                     // 자세 교정 뷰
@@ -383,12 +416,9 @@ struct PostureView: View {
                 .onAppear {
                     bluetoothManager.startBluetooth()
                 }
-            }
         }
     }
 }
-
-
 
 struct PostureSetupView: View {
     @EnvironmentObject var motionManager: HeadphoneMotionManager
@@ -396,49 +426,49 @@ struct PostureSetupView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Capsule()
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.red, Color.blue]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 150, height: 200)
-                .rotation3DEffect(
-                    .radians(motionManager.pitch),
-                    axis: (x: 1, y: 0, z: 0)
-                )
-//                .rotation3DEffect(
-//                    .radians(motionManager.yaw),
-//                    axis: (x: 0, y: 1, z: 0)
-//                )
-                .rotation3DEffect(
-                    .radians(motionManager.roll),
-                    axis: (x: 0, y: 0, z: 1)
-                )
-                .animation(.easeOut(duration: 0.1), value: motionManager.pitch) // 업데이트 주기 제한
-                .padding()
 
-
-            // 현재 Pitch, Roll, Yaw 표시
-            VStack(spacing: 10) {
-                Text("Pitch: \(motionManager.pitch, specifier: "%.2f")")
-                Text("Roll: \(motionManager.roll, specifier: "%.2f")")
-                Text("Yaw: \(motionManager.yaw, specifier: "%.2f")")
-            }
-
-            // 데이터 피커
-            HStack {
-                Text("모니터링 시간 (분):")
-                Picker("", selection: $motionManager.remainTime) {
-                    ForEach(Array(stride(from: 5, through: 60, by: 5)), id: \.self) { time in
-                        Text("\(time)분").tag(time)
+            Text("에어팟이 연결되면 모션을 감지할 수 있어요!")
+                .font(.system(size: 20, weight: .bold))
+            
+            RectViewH(height: 370, color: .white)
+                .overlay {
+                    VStack {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.mainorange, Color.maincolor]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 150, height: 200)
+                            .rotation3DEffect(
+                                .radians(motionManager.pitch),
+                                axis: (x: 1, y: 0, z: 0)
+                            )
+                        //                .rotation3DEffect(
+                        //                    .radians(motionManager.yaw),
+                        //                    axis: (x: 0, y: 1, z: 0)
+                        //                )
+                            .rotation3DEffect(
+                                .radians(motionManager.roll),
+                                axis: (x: 0, y: 0, z: 1)
+                            )
+                            .animation(.easeOut(duration: 0.2), value: motionManager.pitch)
+                            .animation(.easeOut(duration: 0.2), value: motionManager.roll)
+                            .padding(.bottom, 40)
+                     
+                        
+                        VStack(spacing: 10) {
+                            Text("앞뒤 기울기: \(motionManager.pitch >= 0 ? " " : "")\(motionManager.pitch, specifier: "%.2f")")
+                            Text("좌우 기울기: \(motionManager.roll >= 0 ? " " : "")\(motionManager.roll, specifier: "%.2f")")
+                            Text("좌우 회전각: \(motionManager.yaw >= 0 ? " " : "")\(motionManager.yaw, specifier: "%.2f")")
+                        }
+                        .font(.system(.body, design: .monospaced, weight: .semibold))
                     }
                 }
-                .frame(width: 100)
-                .clipped()
-            }
+
+           
             
             // 자세 상태 메시지
             if motionManager.isMonitoring {
@@ -447,7 +477,22 @@ struct PostureSetupView: View {
                     .font(.headline)
             }
             
+            Spacer()
             
+            // 데이터 피커
+            HStack {
+                Text("모니터링 시간 (분):")
+                Picker("", selection: $motionManager.remainTime) {
+                    ForEach(Array(stride(from: 5, through: 60, by: 5)), id: \.self) { time in
+                        Text("\(time)분")
+                            .tag(time)
+                            
+                    }
+                }
+                .accentColor(.maincolor) // 선택 항목 색상을 커스터마이징
+                .frame(width: 100)
+                .clipped()
+            }
         
 
             // 기준 자세 설정 및 모니터링 버튼
@@ -494,6 +539,15 @@ struct PostureView_Previews: PreviewProvider {
     static var previews: some View {
         PostureView()
             .environmentObject(BluetoothManager())
+            .environmentObject(HeadphoneMotionManager())
     }
 }
 
+
+// 현재 Pitch, Roll, Yaw 표시
+//            VStack(spacing: 10) {
+//                Text("앞뒤 기울기(Pitch): \(motionManager.pitch >= 0 ? " " : "")\(motionManager.pitch, specifier: "%.2f")")
+//                Text("좌우 기울기(Roll): \(motionManager.roll >= 0 ? " " : "")\(motionManager.roll, specifier: "%.2f")")
+//                Text("좌우 회전(Yaw): \(motionManager.yaw >= 0 ? " " : "")\(motionManager.yaw, specifier: "%.2f")")
+//            }
+//            .font(.system(.body, design: .monospaced))

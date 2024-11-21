@@ -56,6 +56,7 @@ struct MainTabView: View {
                     ProfileView()
                         .environmentObject(authVM)
                         .environmentObject(homeVM)
+                        .environmentObject(motionManager)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
