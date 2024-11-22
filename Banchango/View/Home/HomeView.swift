@@ -126,7 +126,7 @@ struct LoadedView: View {
                                 Image("Character")
                                     .resizable()
                                     .aspectRatio(contentMode: .fit) // 비율에 맞춰 이미지 크기 조정
-                                    .frame(width: 150, height: 150) // 원하는 크기로 조정
+                                    .frame(width: 130, height: 130) // 원하는 크기로 조정
                                     .padding(.trailing, 15)
                             }
                         }

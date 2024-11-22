@@ -10,11 +10,11 @@ import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
 import CoreBluetooth
+import UserNotifications
 
 
-class AppDelegate: NSObject, UIApplicationDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
-    // var bluetoothManager: BluetoothManager?
     
     func application(_ application: UIApplication,
                    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
@@ -22,13 +22,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Firebase 초기화
         FirebaseApp.configure()
         
-        // Bluetooth 초기화
-//        bluetoothManager = BluetoothManager()
-//        
-//        // Bluetooth 상태 변경을 추적하려면 CBCenteralManager 초기화
-//        let centralManager = CBCentralManager(delegate: bluetoothManager, queue: nil)
-//
-//        
+        // 알림 권한 허용
+        requestNotificationPermission()
+        
+        // UNUserNotificationCenterDelegate 설정(Foreground 상태에서도 알림 표시)
+        UNUserNotificationCenter.current().delegate = self
+        
+        
         
         /*
         gRPC 관련 환경 변수 설정 (GRPC_TRACE 제거)
@@ -42,5 +42,24 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                      open url: URL,
                      options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
       return GIDSignIn.sharedInstance.handle(url)
+    }
+    
+    func requestNotificationPermission() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                print("알림 권한 허용됨")
+            } else {
+                print("알림 권한 거부됨")
+            }
+        }
+    }
+    
+    // Foreground 상태에서도 알림 표시
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Foreground 상태에서도 배너와 소리 표시
+        completionHandler([.banner, .sound])
     }
 }

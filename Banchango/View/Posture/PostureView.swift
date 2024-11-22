@@ -9,6 +9,8 @@ import SwiftUI
 import CoreBluetooth
 import CoreMotion
 import Combine
+import UserNotifications
+import AVFoundation
 
 final class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     private var centralManager: CBCentralManager?
@@ -16,7 +18,7 @@ final class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelega
     
     @Published var isAirPodsConnected = false
     @Published var isBluetoothEnabled = false // 블루투스 활성화 상태
-    
+
     override init() {
         super.init()
     }
@@ -63,6 +65,7 @@ final class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelega
         print("AirPods 연결 해제됨")
         self.isAirPodsConnected = false
     }
+    
 }
 
 final class HeadphoneMotionManageryes: ObservableObject {
@@ -192,6 +195,7 @@ final class HeadphoneMotionManager: ObservableObject {
     
     init() {
         print("HeadphoneMotionManager 초기화됨")
+        configureAudioSession()
         updateAuthorization()
         startTracking()
     }
@@ -201,40 +205,41 @@ final class HeadphoneMotionManager: ObservableObject {
         print("권한 상태: \(isAuthorized ? "허가됨" : "허가되지 않음")")
     }
     
-    /*
-    func startTracking() {
-        guard headphoneManager.isDeviceMotionAvailable else {
-            print("디바이스 모션 데이터가 지원되지 않음")
-            return
+    func configureAudioSession() {
+        do {
+            // 공유 오디오 세션 인스턴스를 가져온다, 모든 iOS 관련 작업이 이 인스턴스에서 관리됨
+            // 오디오 세션은 시스템 수준에서 앱의 오디오 동작을 정의하고, 앱매대 독립적으로 설정 가능
+            let audioSession = AVAudioSession.sharedInstance()
+
+            // 다른 앱과 조화롭게 작동하도록 오디오 세션 카테고리 설정
+            try audioSession.setCategory(
+                // 소리가 없는 경우 다른 앱 방해 안 함(Youtube와 같은 오디오를 방해하지 않도록 설계), 모션 감지 앱에 적합
+                .ambient,
+                options: [.mixWithOthers]  // 다른 앱과 동시 실행 허용(음악, 동영상 앱과 자원을 공유 가능)
+            )
+
+            // 오디오 세션 활성화
+            try audioSession.setActive(true)
+            print("오디오 세션 활성화 완료")
+        } catch {
+            print("오디오 세션 설정 실패: \(error.localizedDescription)")
         }
-        if isTracking {
-            print("이미 모션 데이터를 추적 중입니다.")
-            return
-        }
-        
-        print("모션 데이터 업데이트 시작")
-        headphoneManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, error in
-            if let error = error {
-                print("모션 데이터 업데이트 에러: \(error.localizedDescription)")
-                return
-            }
-            
-            guard let self = self, let motion = motion else {
-                print("모션 데이터를 받지 못했습니다.")
-                return
-            }
-            
-            DispatchQueue.main.async {
-                self.pitch = motion.attitude.pitch
-                self.roll = motion.attitude.roll
-                self.yaw = motion.attitude.yaw
-                
-                // print("Pitch: \(self.pitch), Roll: \(self.roll), Yaw: \(self.yaw)")
-            }
-        }
-        isTracking = true
     }
-    */
+
+    
+//    func configureAudioSession() {
+//        do {
+//            let audioSession = AVAudioSession.sharedInstance()
+//            // 오디오 세션 카테고리 설정
+//            try audioSession.setCategory(.playAndRecord, options: [.mixWithOthers])
+//            // 오디오 세션 활성화
+//            try audioSession.setActive(true)
+//            print("오디오 세션 활성화 완료")
+//        } catch {
+//            print("오디오 세션 설정 실패: \(error.localizedDescription)")
+//        }
+//    }
+
     
     func startTracking() {
         guard headphoneManager.isDeviceMotionAvailable else { return }
@@ -292,11 +297,18 @@ final class HeadphoneMotionManager: ObservableObject {
                 let forwardHeadThreshold: Double = -0.4
                 self.isAlerting = self.pitch < forwardHeadThreshold
                 if self.isAlerting {
-                    print("경고: 바른 자세를 유지해주세요.")
+                    //print("경고: 바른 자세를 유지해주세요.")
+                    scheduleNotification()
                 }
             } else {
                 self.stopMonitoring()
             }
+        }
+        
+        // 백그라운드에서도 타이머 동작 가능하도록 처리
+        DispatchQueue.global(qos: .background).async {
+            RunLoop.current.add(self.timer!, forMode: .common)
+            RunLoop.current.run()
         }
     }
     
@@ -334,11 +346,11 @@ struct PostureView: View {
     @State private var isMonitoring: Bool = false // 모니터링 상태 유지
     
     var body: some View {
-        ZStack {
-            // 배경색
-            Color.gray1
-                .edgesIgnoringSafeArea(.all)
-
+        NavigationStack {
+            ZStack {
+                // 배경색
+                Color.gray1
+                    .edgesIgnoringSafeArea(.all)
                 VStack(spacing: 0) {
                     // 상단 HStack
                     HStack(spacing: 20) {
@@ -401,12 +413,13 @@ struct PostureView: View {
                                 .background(bluetoothManager.isAirPodsConnected ? .maincolor : .blue)
                                 .cornerRadius(10)
                                 .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 2)
+                                
                             }
                             .disabled(bluetoothManager.isAirPodsConnected)
                         }
                     }
                     .padding(.top, 20)
-//                    .padding(.bottom, 100)
+                    
                     Spacer()
                     
                     // 자세 교정 뷰
@@ -418,6 +431,7 @@ struct PostureView: View {
                 .onAppear {
                     bluetoothManager.startBluetooth()
                 }
+            }
         }
     }
 }
@@ -426,8 +440,22 @@ struct PostureSetupView: View {
     @EnvironmentObject var motionManager: HeadphoneMotionManager
     @EnvironmentObject var bluetoothManager: BluetoothManager
 
+    
     var body: some View {
+        
         VStack(spacing: 20) {
+            HStack {
+                Text("사용방법")
+                    .font(.system(size: 20, weight: .bold))
+                    .padding(.leading, 10)
+                    
+                NavigationLink(destination: HelpView()) {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                }
+                Spacer()
+                    
+            }
             RectViewH(height: 400, color: .white)
                 .overlay {
                     VStack {
@@ -476,48 +504,20 @@ struct PostureSetupView: View {
                     .font(.headline)
             }
             
+            HStack {
+                Text("모니터링 시간 (분):")
+                Picker("", selection: $motionManager.remainTime) {
+                    ForEach(Array(stride(from: 5, through: 60, by: 5)), id: \.self) { time in
+                        Text("\(time)분")
+                            .tag(time)
+                            
+                    }
+                }
+                .accentColor(.maincolor) // 선택 항목 색상을 커스터마이징
+                .frame(width: 100)
+                .clipped()
+            }
 
-            
-            // 데이터 피커
-            /*
-            HStack {
-                Text("모니터링 시간 (분):")
-                Picker("", selection: $motionManager.remainTime) {
-                    ForEach(Array(stride(from: 5, through: 60, by: 5)), id: \.self) { time in
-                        Text("\(time)분")
-                            .tag(time)
-                            
-                    }
-                }
-                .accentColor(.maincolor) // 선택 항목 색상을 커스터마이징
-                .frame(width: 100)
-                .clipped()
-            }
-             */
-        
-            
-            HStack {
-                Text("모니터링 시간 (분):")
-                Picker("", selection: $motionManager.remainTime) {
-                    ForEach(Array(stride(from: 5, through: 60, by: 5)), id: \.self) { time in
-                        Text("\(time)분")
-                            .tag(time)
-                            
-                    }
-                }
-                .accentColor(.maincolor) // 선택 항목 색상을 커스터마이징
-                .frame(width: 100)
-                .clipped()
-            }
-             
-            
-//            Button {
-//                
-//            } label: {
-//                Text("시간 설정")
-//                    .foregroundColor(.white)
-//
-//            }.buttonStyle(TimeButtonStyle())
             
             // 기준 자세 설정 및 모니터링 버튼
             Button(action: {
@@ -541,7 +541,7 @@ struct PostureSetupView: View {
             }
             .disabled(
                 motionManager.isCalibrating
-                || !bluetoothManager.isAirPodsConnected
+                || (!bluetoothManager.isAirPodsConnected && !motionManager.isMonitoring)
             ) // 모니터링 중일 때는 버튼 활성화
         }
     }
@@ -554,16 +554,6 @@ struct PostureView_Previews: PreviewProvider {
             .environmentObject(HeadphoneMotionManager())
     }
 }
-
-
-//        .onAppear {
-//            motionManager.updateAuthorization()
-//            motionManager.startTracking()
-//        }
-//        .onDisappear {
-//            motionManager.stopTracking()
-//        }
-
 
 
 
@@ -583,5 +573,36 @@ struct TimeButtonStyle: ButtonStyle {
             .clipShape(RoundedRectangle(cornerRadius: 10)) // 둥근 모양
             //.padding() // 외부 여백
             .animation(.easeInOut(duration: 0.2), value: configuration.isPressed) // 애니메이션 추가
+    }
+}
+
+
+func scheduleNotification() {
+    let content = UNMutableNotificationContent()
+    content.title = "자세 교정"
+    content.body = "자세를 바르게 해주세요"
+    content.sound = .default
+    
+    // 트리거 시간 설정(0초 후)
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+    
+    // 요청 생성
+    let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+    
+    // 알림 등록
+    UNUserNotificationCenter.current().add(request) { error in
+        if let error = error {
+            print("알림 등록 실패: \(error.localizedDescription)")
+        } else {
+            //print("일정 등록 성공")
+        }
+    }
+}
+
+struct HelpView: View {
+    var body: some View {
+        VStack {
+            Text("Help View")
+        }
     }
 }
