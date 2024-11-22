@@ -16,7 +16,7 @@ enum AuthenticationState {
     case nicknameRequired
 }
 
-class AuthenticationViewModel: ObservableObject {
+final class AuthenticationViewModel: ObservableObject {
     
     enum Action {
         case googleLogin

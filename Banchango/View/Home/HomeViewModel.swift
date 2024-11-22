@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import FirebaseDatabase
 
-class HomeViewModel: ObservableObject {
+final class HomeViewModel: ObservableObject {
     enum Action {
         case load
     }

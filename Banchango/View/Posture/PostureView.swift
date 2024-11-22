@@ -65,7 +65,6 @@ final class BluetoothManager: NSObject, ObservableObject, CBCentralManagerDelega
     }
 }
 
-// HeadphoneMotionManager 클래스
 final class HeadphoneMotionManageryes: ObservableObject {
     private var headphoneManager = CMHeadphoneMotionManager()
     
@@ -340,7 +339,7 @@ struct PostureView: View {
             Color.gray1
                 .edgesIgnoringSafeArea(.all)
 
-                VStack(spacing: 30) {
+                VStack(spacing: 0) {
                     // 상단 HStack
                     HStack(spacing: 20) {
                         // ZStack: AirPods 상태 아이콘 및 도넛 애니메이션
@@ -356,9 +355,9 @@ struct PostureView: View {
                                 .background(
                                     Circle()
                                         .fill(Color.white) // 흰색 배경 원
-                                        .frame(width: 117, height: 117) // 흰색 배경 크기를 줄이기 위해 원 크기 조정
+                                        .frame(width: 97, height: 97) // 흰색 배경 크기를 줄이기 위해 원 크기 조정
                                 )
-                                .frame(width: 120, height: 120)
+                                .frame(width: 100, height: 100)
                                 .rotationEffect(Angle(degrees: isAnimating && !bluetoothManager.isAirPodsConnected ? 360 : 0))
                                 .animation(
                                     isAnimating && !bluetoothManager.isAirPodsConnected
@@ -373,7 +372,7 @@ struct PostureView: View {
                             Image("AirPods")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 70, height: 70)
+                                .frame(width: 65, height: 65)
                                 .foregroundColor(bluetoothManager.isAirPodsConnected ? .green : .blue)
                         }
                         
@@ -406,11 +405,14 @@ struct PostureView: View {
                             .disabled(bluetoothManager.isAirPodsConnected)
                         }
                     }
-                        .padding(.horizontal)
-                    
+                    .padding(.top, 20)
+//                    .padding(.bottom, 100)
+                    Spacer()
                     
                     // 자세 교정 뷰
                     PostureSetupView()
+                    
+                    Spacer()
                 }
                 .padding()
                 .onAppear {
@@ -426,13 +428,12 @@ struct PostureSetupView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-
-            Text("에어팟이 연결되면 모션을 감지할 수 있어요!")
-                .font(.system(size: 20, weight: .bold))
-            
-            RectViewH(height: 370, color: .white)
+            RectViewH(height: 400, color: .white)
                 .overlay {
                     VStack {
+                        Text("에어팟이 연결되면 모션을 감지할 수 있어요!")
+                            .font(.system(size: 20, weight: .bold))
+                            //.padding(.top, 10)
                         Capsule()
                             .fill(
                                 LinearGradient(
@@ -446,16 +447,14 @@ struct PostureSetupView: View {
                                 .radians(motionManager.pitch),
                                 axis: (x: 1, y: 0, z: 0)
                             )
-                        //                .rotation3DEffect(
-                        //                    .radians(motionManager.yaw),
-                        //                    axis: (x: 0, y: 1, z: 0)
-                        //                )
+
                             .rotation3DEffect(
                                 .radians(motionManager.roll),
                                 axis: (x: 0, y: 0, z: 1)
                             )
                             .animation(.easeOut(duration: 0.2), value: motionManager.pitch)
                             .animation(.easeOut(duration: 0.2), value: motionManager.roll)
+                            .padding(.top, 20)
                             .padding(.bottom, 40)
                      
                         
@@ -464,12 +463,12 @@ struct PostureSetupView: View {
                             Text("좌우 기울기: \(motionManager.roll >= 0 ? " " : "")\(motionManager.roll, specifier: "%.2f")")
                             Text("좌우 회전각: \(motionManager.yaw >= 0 ? " " : "")\(motionManager.yaw, specifier: "%.2f")")
                         }
-                        .font(.system(.body, design: .monospaced, weight: .semibold))
+                        //.font(.system(.body, design: .monospaced))
+                        .font(.system(size: 13, design: .monospaced))
                     }
                 }
 
            
-            
             // 자세 상태 메시지
             if motionManager.isMonitoring {
                 Text(motionManager.isAlerting ? "자세가 틀어졌습니다!" : "바른 자세 유지 중입니다.")
@@ -477,9 +476,10 @@ struct PostureSetupView: View {
                     .font(.headline)
             }
             
-            Spacer()
+
             
             // 데이터 피커
+            /*
             HStack {
                 Text("모니터링 시간 (분):")
                 Picker("", selection: $motionManager.remainTime) {
@@ -493,8 +493,32 @@ struct PostureSetupView: View {
                 .frame(width: 100)
                 .clipped()
             }
+             */
         
-
+            
+            HStack {
+                Text("모니터링 시간 (분):")
+                Picker("", selection: $motionManager.remainTime) {
+                    ForEach(Array(stride(from: 5, through: 60, by: 5)), id: \.self) { time in
+                        Text("\(time)분")
+                            .tag(time)
+                            
+                    }
+                }
+                .accentColor(.maincolor) // 선택 항목 색상을 커스터마이징
+                .frame(width: 100)
+                .clipped()
+            }
+             
+            
+//            Button {
+//                
+//            } label: {
+//                Text("시간 설정")
+//                    .foregroundColor(.white)
+//
+//            }.buttonStyle(TimeButtonStyle())
+            
             // 기준 자세 설정 및 모니터링 버튼
             Button(action: {
                 if motionManager.isMonitoring {
@@ -519,21 +543,9 @@ struct PostureSetupView: View {
                 motionManager.isCalibrating
                 || !bluetoothManager.isAirPodsConnected
             ) // 모니터링 중일 때는 버튼 활성화
-            // .disabled(motionManager.isCalibrating && !motionManager.isMonitoring)
-
-            
         }
-//        .onAppear {
-//            motionManager.updateAuthorization()
-//            motionManager.startTracking()
-//        }
-//        .onDisappear {
-//            motionManager.stopTracking()
-//        }
     }
 }
-
-
 
 struct PostureView_Previews: PreviewProvider {
     static var previews: some View {
@@ -544,10 +556,32 @@ struct PostureView_Previews: PreviewProvider {
 }
 
 
-// 현재 Pitch, Roll, Yaw 표시
-//            VStack(spacing: 10) {
-//                Text("앞뒤 기울기(Pitch): \(motionManager.pitch >= 0 ? " " : "")\(motionManager.pitch, specifier: "%.2f")")
-//                Text("좌우 기울기(Roll): \(motionManager.roll >= 0 ? " " : "")\(motionManager.roll, specifier: "%.2f")")
-//                Text("좌우 회전(Yaw): \(motionManager.yaw >= 0 ? " " : "")\(motionManager.yaw, specifier: "%.2f")")
-//            }
-//            .font(.system(.body, design: .monospaced))
+//        .onAppear {
+//            motionManager.updateAuthorization()
+//            motionManager.startTracking()
+//        }
+//        .onDisappear {
+//            motionManager.stopTracking()
+//        }
+
+
+
+
+struct TimeButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(configuration.isPressed ? Color.white : Color.black)    // 텍스트 색상
+            .padding()                  // 내부 여백
+            .frame(maxWidth: .infinity) // 버튼 넓이 설정
+            .background(
+                configuration.isPressed ? Color.gray : Color.maincolor // 누를 때 색상 변경
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black, lineWidth: 2) // 테두리
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10)) // 둥근 모양
+            //.padding() // 외부 여백
+            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed) // 애니메이션 추가
+    }
+}

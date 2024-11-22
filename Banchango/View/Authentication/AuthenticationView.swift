@@ -9,6 +9,8 @@ import SwiftUI
 
 struct AuthenticationView: View {
     @StateObject var authVM: AuthenticationViewModel
+    @StateObject var bluetoothManager = BluetoothManager()
+    @StateObject var motionManager = HeadphoneMotionManager()
     @EnvironmentObject var container: DIContainer
     
     var body: some View {
@@ -19,6 +21,8 @@ struct AuthenticationView: View {
                 // 인증된 상태에서만 HomeViewModel필요하기 때문에 여기서 생성
                 MainTabView(homeVM: HomeViewModel(container: container, userId: authVM.userId ?? ""))
                         .environmentObject(authVM)
+                        .environmentObject(bluetoothManager)
+                        .environmentObject(motionManager)
                     
             case .unauthenticated:
                 LoginView()

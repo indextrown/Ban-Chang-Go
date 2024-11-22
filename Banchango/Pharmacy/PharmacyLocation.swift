@@ -80,7 +80,7 @@ struct PharmacyResponse: Codable {
 }
 
 // MARK: - 카카오API를 통해 특정 위치 주변의 약국 정보를 가져오는 역할을 하는 싱글톤 클래스
-class PharmacyService {
+final class PharmacyService {
     static let shared = PharmacyService() // 싱글톤 인스턴스
     private let apiKey = Bundle.main.infoDictionary?["PHARMACY_SERVICE_API_KEY"] ?? ""
     private init() {} // private 생성자
@@ -114,7 +114,7 @@ class PharmacyService {
 }
 
 // MARK: - PharmacyXMLParser
-class PharmacyXMLParser: NSObject, XMLParserDelegate {
+final class PharmacyXMLParser: NSObject, XMLParserDelegate {
     private var currentElement = ""
     private var currentPharmacy = Pharmacy(name: "", latitude: 0.0, longitude: 0.0, address: "", city: [], roadAddress: "", phone: "")
     private var pharmacies: [Pharmacy] = []
@@ -187,10 +187,8 @@ class PharmacyXMLParser: NSObject, XMLParserDelegate {
     }
 }
 
-
-
 // MARK: - PharmacyManager
-class PharmacyManager {
+final class PharmacyManager {
     static let shared = PharmacyManager()
     private init() {}
     func getPharmacyInfo_async(q0: String, q1: String, pageNo: String, numOfRows: String, qn: String) async -> Pharmacy? {
@@ -290,8 +288,6 @@ class PharmacyManager {
     }
 
 }
-
-
 
 func testFetchPharmacyInfo() async {
     // 호출할 파라미터 설정

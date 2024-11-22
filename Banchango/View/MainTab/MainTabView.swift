@@ -31,11 +31,11 @@ enum MainTabType: CaseIterable {
 
 
 struct MainTabView: View {
+    @StateObject var homeVM: HomeViewModel
     @EnvironmentObject var authVM: AuthenticationViewModel
     @EnvironmentObject var container: DIContainer
-    @StateObject var homeVM: HomeViewModel
-    @StateObject var bluetoothManager = BluetoothManager() // BluetoothManager 초기화
-    @StateObject var motionManager = HeadphoneMotionManager()
+    @EnvironmentObject var bluetoothManager: BluetoothManager
+    @EnvironmentObject var motionManager: HeadphoneMotionManager
     @State private var selectedTab: MainTabType = .home
 
     var body: some View {
@@ -48,15 +48,12 @@ struct MainTabView: View {
                         .environmentObject(homeVM)
                 case .posture:
                     PostureView()
-                        .environmentObject(bluetoothManager)
-                        .environmentObject(motionManager)
                 case .map:
                     MapView()
                 case .profile:
                     ProfileView()
                         .environmentObject(authVM)
                         .environmentObject(homeVM)
-                        .environmentObject(motionManager)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
