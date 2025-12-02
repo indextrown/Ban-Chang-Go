@@ -30,6 +30,8 @@
 |**CMPedometer**| 걸음 수 추적 및 움직임 데이터 |
 |**UserDefaults**| 만보기 데이터 저장 |
 
+</br><br/>
+
 # 3. 핵심 성과
 
 ### **1. 디바운스를 직접 구현하며 비동기 흐름과 성능 최적화를 이해한 경험**
@@ -74,6 +76,6 @@ func debouncefetchNearbyPharmacies(for coordinate: CLLocationCoordinate2D) {
 ```
 
 > **성과**  
-> 🔸 지도 이동 시 API 중복 호출이 크게 줄어 부드러운 UX 확보
-> 🔸 디바운스를 직접 구현하면서 비동기 처리·이벤트 제어 흐름을 깊게 이해
-> 🔸 이후 Combine의 debounce를 학습할 때 개념이 빠르게 연결됨
+> 🔸 지도 이동 시 API 중복 호출이 크게 줄어 부드러운 UX 확보   
+> 🔸 디바운스를 직접 구현하면서 비동기 처리·이벤트 제어 흐름을 깊게 이해  
+> 🔸 이후 Combine의 debounce를 학습할 때 개념이 빠르게 연결됨  
